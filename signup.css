@@ -1,0 +1,215 @@
+/* =============================
+   ReServe — Sign-Up Page Styles
+   Design System:
+   - Font: Montserrat
+   - Colors:
+     --primary: #4CAF50 (green)
+     --accent:  #FFC107 (warm yellow)
+     --text:    #333333
+     --bg:      #FFFFFF
+     --light:   #f4f4f4
+   Notes:
+   - Responsive layout via Flex and Grid
+   - Consistent button/input styling
+   ============================= */
+
+   :root{
+    --primary:#4CAF50;
+    --accent:#FFC107;
+    --text:#333333;
+    --bg:#FFFFFF;
+    --light:#f4f4f4;
+    --radius:12px;
+    --shadow:0 10px 24px rgba(0,0,0,0.08);
+  }
+  
+  *{ box-sizing:border-box; }
+  
+  html, body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+  }
+  
+  /* Header / Nav */
+  .site-header{
+    border-bottom:1px solid var(--light);
+    background:#fff;
+  }
+  
+  .nav{
+    max-width:1100px;
+    margin:0 auto;
+    padding:1rem 1.25rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  
+  .logo{
+    font-weight:700;
+    font-size:1.25rem;
+    text-decoration:none;
+    color:var(--text);
+  }
+  
+  .nav-actions .nav-link{
+    color:var(--text);
+    text-decoration:none;
+    margin-left:1rem;
+    font-weight:600;
+  }
+  
+  /* Main */
+  .main{
+    display:grid;
+    place-items:center;
+    padding:3rem 1.25rem;
+  }
+  
+  .signup-card{
+    width:100%;
+    max-width:560px;
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:2rem;
+  }
+  
+  #signup-title{
+    margin:0 0 .25rem 0;
+    font-size:1.75rem;
+  }
+  
+  .tagline{
+    margin:.25rem 0 1.5rem;
+    color:#555;
+  }
+  
+  /* Form */
+  .form-row{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:1rem;
+  }
+  
+  label{
+    font-weight:600;
+    margin-bottom:.35rem;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"]{
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:.85rem 1rem;
+    font-size:1rem;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+    background: var(--light);
+  }
+  
+  input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(76,175,80,0.15);
+    background:#fff;
+  }
+  
+  fieldset.form-row{
+    border:none;
+    padding:0;
+    margin:1rem 0 1.25rem;
+  }
+  
+  legend{
+    font-weight:600;
+    margin-bottom:.5rem;
+  }
+  
+  .radio-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:1rem 1.5rem;
+  }
+  
+  .radio{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    font-weight:500;
+  }
+  
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:.9rem 1.25rem;
+    border-radius:999px;
+    font-weight:700;
+    text-decoration:none;
+    border:0;
+    cursor:pointer;
+    transition:transform .06s ease, box-shadow .2s ease, background .2s ease;
+  }
+  
+  .btn-primary{
+    background:var(--primary);
+    color:#fff;
+    width:100%;
+    margin-top:.5rem;
+    box-shadow:0 8px 16px rgba(76,175,80,0.25);
+  }
+  .btn-primary:hover{ transform:translateY(-1px); }
+  .btn-primary:active{ transform:translateY(0); }
+  
+  .login-hint{
+    text-align:center;
+    margin-top:1rem;
+    color:#555;
+  }
+  
+  .login-link{
+    color:var(--primary);
+    font-weight:700;
+    text-decoration:none;
+  }
+  
+  .form-error{
+    color:#c62828; /* accessible red for errors */
+    font-weight:600;
+    margin:0 0 .75rem;
+    min-height:1.2em; /* reserve space so layout doesn't jump */
+  }
+  
+  /* Footer */
+  .site-footer{
+    border-top:1px solid var(--light);
+    padding:1.25rem;
+    margin-top:2rem;
+    background:#fff;
+  }
+  
+  .footer-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    gap:.75rem;
+    align-items:center;
+    color:#666;
+  }
+  
+  .footer-inner a{
+    color:inherit;
+    text-decoration:none;
+    font-weight:600;
+  }
+  
+  /* Responsive */
+  @media (max-width:520px){
+    .signup-card{ padding:1.5rem; }
+    #signup-title{ font-size:1.5rem; }
+  }
+  

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ReServe — Sign Up</title>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Page Styles -->
+  <link rel="stylesheet" href="signup.css" />
+  <link rel="icon" type="image/x-icon" href="assets/lexicon.jpeg">
+
+</head>
+<body>
+  <!-- Header / Nav -->
+  <header class="site-header">
+    <nav class="nav">
+      <a class="logo" href="#">ReServe</a>
+      <div class="nav-actions">
+        <a class="nav-link" href="#">About Us</a>
+        <a class="nav-link" href="#">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <section class="signup-card" aria-labelledby="signup-title">
+      <h1 id="signup-title">Join the ReServe Community</h1>
+      <p class="tagline">Reduce food waste and feed our campus.</p>
+
+      <!-- Inline error region (filled by JS if needed) -->
+      <p id="form-error" class="form-error" role="alert" aria-live="polite"></p>
+
+      <form id="signup-form" novalidate>
+        <div class="form-row">
+          <label for="fullName">Full Name</label>
+          <input id="fullName" name="fullName" type="text" placeholder="e.g., Alex Johnson" required />
+        </div>
+
+        <div class="form-row">
+          <label for="email">University Email</label>
+          <input id="email" name="email" type="email" placeholder="name@university.edu" required />
+        </div>
+
+        <div class="form-row">
+          <label for="password">Create Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" minlength="8" required />
+        </div>
+
+        <div class="form-row">
+          <label for="confirmPassword">Confirm Password</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" minlength="8" required />
+        </div>
+
+        <fieldset class="form-row">
+          <legend>Account Type</legend>
+          <div class="radio-group">
+            <label class="radio">
+              <input type="radio" name="accountType" value="student" required />
+              <span>Student</span>
+            </label>
+            <label class="radio">
+              <input type="radio" name="accountType" value="dining" />
+              <span>Dining Hall Staff</span>
+            </label>
+            <label class="radio">
+              <input type="radio" name="accountType" value="nonprofit" />
+              <span>Nonprofit Partner</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary">Create Account</button>
+
+        <p class="login-hint">
+          Already have an account?
+          <a class="login-link" href="#">Log In</a>
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="#">About Us</a>
+      <span aria-hidden="true">•</span>
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+
+  <!-- Page Script -->
+  <script src="signup.js"></script>
+</body>
+</html>
