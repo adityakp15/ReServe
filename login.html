@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login • ReServe</title>
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#22c55e" />
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="home.html" aria-label="Food Waste Connector Home">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>ReServe</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="home.html" class="muted">Browse</a>
+        <a href="#" class="muted">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="container auth-grid">
+      <!-- Left / value prop -->
+      <section class="side">
+        <h1 class="h1">Reduce waste. <span style="color:#8ef7b4">Feed more people.</span></h1>
+        <p class="muted">Dining halls post surplus food in under two minutes. Nonprofits claim with one tap. Real-time updates, clear pickup windows, and accessible design from the ground up.</p>
+        <div class="kv" style="margin-top:1rem">
+          <span>WCAG 2.1 AA</span>
+          <span>PWA-ready</span>
+          <span>JWT Auth</span>
+          <span>PostgreSQL</span>
+        </div>
+      </section>
+
+      <!-- Right / login form -->
+      <section class="card pad" aria-labelledby="login-title">
+        <h2 id="login-title" class="h2">Sign in</h2>
+        <p class="muted">Use your verified email to access your dashboard.</p>
+
+        <!--
+          Hook this to your backend:
+          POST /api/auth/login  (expects JSON or form-data)
+          If you use cookies (httpOnly), you can keep method="post" and handle server-side.
+        -->
+        <form class="form" method="post" action="/api/auth/login" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" class="input" type="email" required
+                   placeholder="you@organization.org" autocomplete="email"
+                   aria-describedby="email-hint">
+            <div id="email-hint" class="hint">Use your organization email (e.g., .edu or .org).</div>
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" class="input" type="password" minlength="8" required
+                   placeholder="••••••••" autocomplete="current-password">
+            <div class="hint">Minimum 8 characters. Never share your password.</div>
+          </div>
+
+          <div class="field">
+            <label for="role">Role</label>
+            <select id="role" name="role" required aria-label="Select role">
+              <option value="" selected disabled>Select your role</option>
+              <option value="dining_hall_staff">Dining Hall Staff</option>
+              <option value="nonprofit_coordinator">Nonprofit Coordinator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="kv">
+            <label style="display:flex; align-items:center; gap:.5rem">
+              <input type="checkbox" name="remember" aria-label="Remember this device">
+              <span class="muted">Remember me</span>
+            </label>
+            <a class="muted" href="/forgot-password">Forgot password?</a>
+          </div>
+
+          <button class="btn" type="submit">Sign in</button>
+          <button class="btn ghost" type="button" onclick="location.href='/register'">Create an account</button>
+
+          <!-- Live region for server-side auth errors -->
+          <div class="error" id="auth-error" role="alert" aria-live="polite" style="display:none">
+            Invalid credentials. Please try again.
+          </div>
+        </form>
+
+        <div class="footer">Protected by role-based access control • Email verification required</div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Home • ReServe</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <meta name="description" content="Browse and claim surplus food donations from nearby dining halls."/>
+</head>
+<body>
+  <!-- Top navigation -->
+  <header class="nav" role="banner">
+    <div class="container nav-inner">
+      <a class="brand" href="home.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>ReServe</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#" aria-current="page">Donations</a>
+        <a class="muted" href="#">My Listings</a>
+        <a class="muted" href="#">Notifications</a>
+        <span class="badge" title="Current role"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0-5-5a5 5 0 0 0 5 5m0 2c-4 0-8 2-8 6v1h16v-1c0-4-4-6-8-6"/></svg> Nonprofit</span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero + filters -->
+    <section class="container hero">
+      <h1 class="h1">Available Donations Nearby</h1>
+      <p class="muted">Filter by food type, pickup window, or distance. Listings update in real-time.</p>
+
+      <form class="card pad filters" role="search" aria-label="Donation filters">
+        <div class="row">
+          <div class="field">
+            <label for="foodType">Food type</label>
+            <select id="foodType" name="foodType">
+              <option value="">Any</option>
+              <option>Prepared meals</option>
+              <option>Produce</option>
+              <option>Baked goods</option>
+              <option>Dairy</option>
+              <option>Mixed</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="distance">Distance</label>
+            <select id="distance" name="distance">
+              <option value="">Any</option>
+              <option value="3">≤ 3 miles</option>
+              <option value="5">≤ 5 miles</option>
+              <option value="10">≤ 10 miles</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="window">Pickup window</label>
+            <select id="window" name="pickup_window">
+              <option value="">Any time</option>
+              <option value="now">Ready now</option>
+              <option value="1h">Within 1 hour</option>
+              <option value="today">By end of day</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="kv">
+          <button type="submit" class="btn">Apply filters</button>
+          <button type="reset" class="btn ghost">Reset</button>
+          <span class="status" aria-live="polite">Live: connected</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Cards -->
+    <section class="container stack" aria-labelledby="listings-title">
+      <h2 id="listings-title" class="h2">Listings</h2>
+
+      <div class="cards" role="list">
+        <!-- Card 1 -->
+        <article class="card pad" role="listitem">
+          <div class="kv" style="justify-content:space-between; align-items:center">
+            <strong>Dining Hall A</strong>
+            <span class="status warn" title="Pickup soon">Pickup by 3:30 PM</span>
+          </div>
+          <h3 class="h2" style="margin-top:.25rem">Prepared meals • 35 servings</h3>
+          <p class="muted">Allergens: contains soy, gluten</p>
+          <div class="kv" style="margin:.6rem 0">
+            <span>Location: East Campus</span>
+            <span>Window: 2:30–3:30 PM</span>
+            <span>~1.2 miles</span>
+          </div>
+          <div class="kv">
+            <span>Veg</span><span>Low sodium</span><span>Hot-held</span>
+          </div>
+          <div class="kv" style="margin-top:.8rem">
+            <button class="btn" aria-label="Claim donation from Dining Hall A">Claim</button>
+            <button class="btn ghost" aria-label="View details for Dining Hall A">Details</button>
+          </div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="card pad" role="listitem">
+          <div class="kv" style="justify-content:space-between; align-items:center">
+            <strong>Dining Hall B</strong>
+            <span class="status">Ready now</span>
+          </div>
+          <h3 class="h2" style="margin-top:.25rem">Produce • 60 lbs mixed greens</h3>
+          <p class="muted">Allergens: none reported</p>
+          <div class="kv" style="margin:.6rem 0">
+            <span>Location: South Dock</span>
+            <span>Window: 1:15–4:00 PM</span>
+            <span>~3.4 miles</span>
+          </div>
+          <div class="kv">
+            <span>Refrigerated</span><span>Boxes</span>
+          </div>
+          <div class="kv" style="margin-top:.8rem">
+            <button class="btn">Claim</button>
+            <button class="btn ghost">Details</button>
+          </div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="card pad" role="listitem">
+          <div class="kv" style="justify-content:space-between; align-items:center">
+            <strong>Campus Bakery</strong>
+            <span class="status">Ready now</span>
+          </div>
+          <h3 class="h2" style="margin-top:.25rem">Baked goods • 48 items</h3>
+          <p class="muted">Allergens: contains gluten</p>
+          <div class="kv" style="margin:.6rem 0">
+            <span>Location: North Gate</span>
+            <span>Window: 12:00–5:00 PM</span>
+            <span>~0.8 miles</span>
+          </div>
+          <div class="kv">
+            <span>Room temp</span><span>Assorted</span>
+          </div>
+          <div class="kv" style="margin-top:.8rem">
+            <button class="btn">Claim</button>
+            <button class="btn ghost">Details</button>
+          </div>
+        </article>
+      </div>
+
+      <p class="muted" style="text-align:center">Don’t see your listing? <a href="#" class="muted" style="text-decoration:underline">Post a donation</a>.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year">2025</span> Food Waste Connector</span> •
+    <span>Built for responsiveness & accessibility</span>
+  </footer>
+
+  <!-- (Optional) tiny inline script to update the year without external JS files. Remove if you prefer 100% HTML/CSS. -->
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
