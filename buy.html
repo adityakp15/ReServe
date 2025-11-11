@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Buy • ReServe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="buy.css" />
+  <link rel="icon" type="image/x-icon" href="assets/lexicon.jpeg">
+</head>
+<body>
+  <!-- Header -->
+  <header class="nav" role="banner">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="home.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>ReServe</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="home.html">Home</a>
+        <a class="nav-link" href="buy.html" aria-current="page">Buy</a>
+        <a class="nav-link" href="sell.html">Sell</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+        <a class="nav-link" href="signup.html">Sign Up</a>
+        <a class="nav-link" href="login.html">Log In</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app">
+    <div class="container">
+      <!-- Hero Section -->
+      <section class="hero">
+        <h1 class="h1">Browse Available Food</h1>
+        <p class="muted">Real-time surplus from dining halls. Claim within the pickup window.</p>
+      </section>
+
+      <!-- Search / Filters -->
+      <section class="card pad filters-card">
+        <div class="filters-grid">
+          <div class="field">
+            <label for="q">Search</label>
+            <input id="q" class="input" placeholder="Search meals, tags, locations…" />
+          </div>
+
+          <div class="field">
+            <label for="diet">Dietary</label>
+            <select id="diet" class="select">
+              <option>All</option>
+              <option>Vegetarian</option>
+              <option>Vegan</option>
+              <option>Pescatarian</option>
+              <option>High Protein</option>
+              <option>Halal</option>
+              <option>Gluten Free</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="hall">Dining Hall</label>
+            <select id="hall" class="select">
+              <option>All</option>
+              <option>Ikenberry Dining</option>
+              <option>ISR</option>
+              <option>FAR</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="maxPrice">Max Price (USD)</label>
+            <input id="maxPrice" class="input" inputmode="decimal" placeholder="" />
+          </div>
+        </div>
+
+        <div class="filter-actions-row">
+          <button id="applyFilters" class="btn btn--primary">Apply filters</button>
+          <button id="clearFilters" class="btn ghost">Reset</button>
+          <button id="onlyAvail" class="btn ghost toggle-btn">Show Only Available</button>
+        </div>
+      </section>
+
+      <!-- Cards -->
+      <section class="card-list" id="cards">
+        <!-- CARD 1 -->
+        <article class="card pad product"
+                 data-id="1"
+                 data-title="Veggie Pasta Primavera"
+                 data-desc="Penne + seasonal vegetables, marinara; parmesan optional."
+                 data-hall="ISR – Main Entrance"
+                 data-time="03:19 AM – 04:25 AM"
+                 data-available="24"
+                 data-price="2.50"
+                 data-fresh="30"
+                 data-tags="Vegetarian"
+                 data-allergens="Gluten">
+          <div class="product-body">
+            <div class="product-topline">
+              <h3 class="product-title link-like js-open-modal">Veggie Pasta Primavera</h3>
+              <span class="pill pill--fresh"><span class="mins">30</span> mins</span>
+            </div>
+            <p class="muted line-clamp-1">Penne + seasonal vegetables, marinara; parmesan optional.</p>
+
+            <div class="product-meta">
+              <div class="meta-row">
+                <span class="emoji">📍</span><span>ISR – Main Entrance</span>
+              </div>
+              <div class="meta-row">
+                <span class="emoji">⏰</span><span>03:19 AM – 04:25 AM</span>
+              </div>
+              <div class="badges">
+                <span class="badge badge--veg">Vegetarian</span>
+                <span class="badge badge--allergen">Allergens: Gluten</span>
+              </div>
+            </div>
+
+            <div class="product-inv muted">
+              <strong>24 meals</strong> • $2.50
+            </div>
+          </div>
+
+          <div class="product-cta">
+            <div class="qty-row">
+              <select class="select qty"></select>
+              <button class="btn icon minus">−</button>
+              <button class="btn icon plus">+</button>
+              <button class="btn ghost max">Max</button>
+              <button class="btn ghost clear">Clear</button>
+            </div>
+            <button class="btn btn--primary btn--block reserve">Reserve</button>
+          </div>
+        </article>
+
+        <!-- CARD 2 -->
+        <article class="card pad product"
+                 data-id="2"
+                 data-title="Grilled Chicken & Rice Bowl"
+                 data-desc="Brown rice, steamed veggies, grilled chicken."
+                 data-hall="Ikenberry Dining – South Lobby"
+                 data-time="03:28 AM – 04:43 AM"
+                 data-available="18"
+                 data-price="3.50"
+                 data-fresh="55"
+                 data-tags="High Protein"
+                 data-allergens="Soy">
+          <div class="product-body">
+            <div class="product-topline">
+              <h3 class="product-title link-like js-open-modal">Grilled Chicken & Rice Bowl</h3>
+              <span class="pill pill--fresh"><span class="mins">55</span> mins</span>
+            </div>
+            <p class="muted line-clamp-1">Brown rice, steamed veggies, grilled chicken.</p>
+
+            <div class="product-meta">
+              <div class="meta-row">
+                <span class="emoji">📍</span><span>Ikenberry Dining – South Lobby</span>
+              </div>
+              <div class="meta-row">
+                <span class="emoji">⏰</span><span>03:28 AM – 04:43 AM</span>
+              </div>
+              <div class="badges">
+                <span class="badge badge--protein">High Protein</span>
+                <span class="badge badge--allergen">Allergens: Soy</span>
+              </div>
+            </div>
+
+            <div class="product-inv muted">
+              <strong>18 meals</strong> • $3.50
+            </div>
+          </div>
+
+          <div class="product-cta">
+            <div class="qty-row">
+              <select class="select qty"></select>
+              <button class="btn icon minus">−</button>
+              <button class="btn icon plus">+</button>
+              <button class="btn ghost max">Max</button>
+              <button class="btn ghost clear">Clear</button>
+            </div>
+            <button class="btn btn--primary btn--block reserve">Reserve</button>
+          </div>
+        </article>
+
+        <!-- CARD 3 -->
+        <article class="card pad product"
+                 data-id="3"
+                 data-title="Salmon Trays (6oz)"
+                 data-desc="Baked salmon portions with lemon."
+                 data-hall="FAR – Loading Bay Window"
+                 data-time="03:43 AM – 05:13 AM"
+                 data-available="10"
+                 data-price="5"
+                 data-fresh="80"
+                 data-tags="Pescatarian"
+                 data-allergens="Fish">
+          <div class="product-body">
+            <div class="product-topline">
+              <h3 class="product-title link-like js-open-modal">Salmon Trays (6oz)</h3>
+              <span class="pill pill--fresh"><span class="mins">80</span> mins</span>
+            </div>
+            <p class="muted line-clamp-1">Baked salmon portions with lemon.</p>
+
+            <div class="product-meta">
+              <div class="meta-row">
+                <span class="emoji">📍</span><span>FAR – Loading Bay Window</span>
+              </div>
+              <div class="meta-row">
+                <span class="emoji">⏰</span><span>03:43 AM – 05:13 AM</span>
+              </div>
+              <div class="badges">
+                <span class="badge badge--pesc">Pescatarian</span>
+                <span class="badge badge--allergen">Allergens: Fish</span>
+              </div>
+            </div>
+
+            <div class="product-inv muted">
+              <strong>10 meals</strong> • $5
+            </div>
+          </div>
+
+          <div class="product-cta">
+            <div class="qty-row">
+              <select class="select qty"></select>
+              <button class="btn icon minus">−</button>
+              <button class="btn icon plus">+</button>
+              <button class="btn ghost max">Max</button>
+              <button class="btn ghost clear">Clear</button>
+            </div>
+            <button class="btn btn--primary btn--block reserve">Reserve</button>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal host -->
+  <div id="modal-root" class="modal hidden" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__content" id="modal-content"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© <span id="year">2025</span> ReServe</span> •
+    <span><a href="#">About Us</a></span> •
+    <span><a href="#">Contact</a></span>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="buy.js"></script>
+</body>
+</html>

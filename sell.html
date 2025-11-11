@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Sell • ReServe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sell.css">
+  <link rel="icon" type="image/x-icon" href="assets/lexicon.jpeg">
+</head>
+<body class="sell-page">
+  <!-- Header / Nav -->
+  <header class="nav" role="banner">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="home.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>ReServe</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="home.html">Home</a>
+        <a class="nav-link" href="buy.html">Buy</a>
+        <a class="nav-link" href="sell.html" aria-current="page">Sell</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+        <a class="nav-link" href="signup.html">Sign Up</a>
+        <a class="nav-link" href="login.html">Log In</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1 class="h1">Post a Donation</h1>
+      <p class="muted">List surplus food for students and NGOs to reserve.</p>
+    </section>
+
+    <form id="sellForm" class="card pad" novalidate>
+      <!-- BASICS -->
+      <section class="sell-section">
+        <div class="sell-section__hdr">
+          <h3 class="sell-section__title">Basics</h3>
+          <button type="button" class="btn ghost section-clear" id="clearBasics">Clear section</button>
+        </div>
+
+        <div class="grid grid-12">
+          <div class="col-span-6 field">
+            <label class="label" for="title">Title <span class="req">*</span></label>
+            <input id="title" class="input" required>
+            <div class="hint">Summarize the item (e.g., "Grilled Chicken &amp; Rice Bowl").</div>
+            <div class="error" id="err-title" hidden></div>
+          </div>
+
+          <div class="col-span-6 field">
+            <label class="label" for="desc">Description <span class="req">*</span></label>
+            <textarea id="desc" class="textarea" required></textarea>
+            <div class="hint">Key ingredients, reheating notes, or pickup instructions.</div>
+            <div class="error" id="err-description" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUANTITY & PRICING -->
+      <section class="sell-section">
+        <div class="sell-section__hdr">
+          <h3 class="sell-section__title">Quantity &amp; Pricing</h3>
+          <button type="button" class="btn ghost section-clear" id="clearQty">Clear section</button>
+        </div>
+
+        <div class="grid grid-12">
+          <div class="col-span-3 field">
+            <label class="label" for="units">Available Units <span class="req">*</span></label>
+            <input id="units" class="input" type="number" min="0" step="1" inputmode="numeric" required>
+            <div class="hint">Whole numbers only (e.g., 24).</div>
+            <div class="error" id="err-units" hidden></div>
+          </div>
+
+          <div class="col-span-3 field">
+            <label class="label" for="unitLabel">Unit Label <span class="req">*</span></label>
+            <select id="unitLabel" class="select" required>
+              <option value="meals">meals</option>
+              <option value="lbs">lbs</option>
+              <option value="trays">trays</option>
+              <option value="slices">slices</option>
+              <option value="boxes">boxes</option>
+            </select>
+            <div class="hint">How you're counting (e.g., "meals", "lbs").</div>
+            <div class="error" id="err-unitLabel" hidden></div>
+          </div>
+
+          <div class="col-span-6 field">
+            <label class="label" for="price">Price (USD) <span class="req">*</span></label>
+            <input id="price" class="input" type="number" min="0" step="0.01" inputmode="decimal" required>
+            <div class="hint" id="pricePreview">Example: 3 or 3.50</div>
+            <div class="error" id="err-price" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PICKUP -->
+      <section class="sell-section">
+        <div class="sell-section__hdr">
+          <h3 class="sell-section__title">Pickup</h3>
+          <button type="button" class="btn ghost section-clear" id="clearPickup">Clear section</button>
+        </div>
+
+        <div class="grid grid-12">
+          <div class="col-span-6 field">
+            <label class="label" for="location">Location <span class="req">*</span></label>
+            <input id="location" class="input" required>
+            <div class="hint">Building / entrance / desk (e.g., "ISR Main Entrance").</div>
+            <div class="error" id="err-location" hidden></div>
+          </div>
+
+          <div class="col-span-3 field">
+            <label class="label" for="winFrom">Window – From <span class="req">*</span></label>
+            <input id="winFrom" class="input" type="datetime-local" required>
+            <div class="error" id="err-windowFrom" hidden></div>
+          </div>
+
+          <div class="col-span-3 field">
+            <label class="label" for="winTo">Window – To <span class="req">*</span></label>
+            <input id="winTo" class="input" type="datetime-local" required>
+            <div class="hint">End time must be after start.</div>
+            <div class="error" id="err-windowTo" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SELLER -->
+      <section class="sell-section">
+        <div class="sell-section__hdr">
+          <h3 class="sell-section__title">Seller</h3>
+          <button type="button" class="btn ghost section-clear" id="clearSeller">Clear section</button>
+        </div>
+
+        <div class="grid grid-12">
+          <div class="col-span-4 field">
+            <label class="label" for="stype">Type <span class="req">*</span></label>
+            <select id="stype" class="select">
+              <option>Dining Hall</option>
+              <option>Restaurant</option>
+              <option>RSO</option>
+              <option>Student/Private</option>
+            </select>
+          </div>
+
+          <!-- Dining Hall picker (visible by default) -->
+          <div id="diningWrap" class="col-span-4 field">
+            <label class="label" for="dhall">Dining Hall <span class="req">*</span></label>
+            <select id="dhall" class="select">
+              <option value="">Select…</option>
+              <option>Ikenberry Dining</option>
+              <option>ISR</option>
+              <option>FAR</option>
+            </select>
+            <div class="error" id="err-diningHall" hidden></div>
+          </div>
+
+          <!-- Restaurant name -->
+          <div id="restoWrap" class="col-span-8 field" hidden>
+            <label class="label" for="rname">Restaurant Name <span class="req">*</span></label>
+            <input id="rname" class="input">
+            <div class="error" id="err-restaurantName" hidden></div>
+          </div>
+
+          <!-- RSO name -->
+          <div id="rsoWrap" class="col-span-8 field" hidden>
+            <label class="label" for="rsoname">RSO Name <span class="req">*</span></label>
+            <input id="rsoname" class="input">
+            <div class="error" id="err-rsoName" hidden></div>
+          </div>
+
+          <!-- Contact (always present) -->
+          <div class="col-span-4 field">
+            <label class="label" for="cname">Contact Name <span class="req">*</span></label>
+            <input id="cname" class="input" required>
+            <div class="hint">Person responsible at pickup.</div>
+            <div class="error" id="err-contactName" hidden></div>
+          </div>
+          <div class="col-span-4 field">
+            <label class="label" for="cemail">Contact Email <span class="req">*</span></label>
+            <input id="cemail" class="input" type="email" required>
+            <div class="hint">We'll share this only with the reserver.</div>
+            <div class="error" id="err-contactEmail" hidden></div>
+          </div>
+          <div class="col-span-4 field">
+            <label class="label" for="cphone">Contact Phone <span class="req">*</span></label>
+            <input id="cphone" class="input" required>
+            <div class="hint">Format like (217) 555-1212 or 217-555-1212.</div>
+            <div class="error" id="err-contactPhone" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIETARY & ALLERGENS -->
+      <section class="sell-section">
+        <div class="sell-section__hdr">
+          <h3 class="sell-section__title">Dietary & Allergens</h3>
+          <button type="button" class="btn ghost section-clear" id="clearDietAller">Clear section</button>
+        </div>
+
+        <div class="grid grid-12">
+          <div class="col-span-6 field">
+            <label class="label">Dietary Tags</label>
+            <div id="dietChips" class="chip-group"></div>
+            <div id="dietOtherWrap" class="field" style="margin-top:8px" hidden>
+              <label class="label" for="dietOther">Other (required when selected)</label>
+              <input id="dietOther" class="input">
+              <div class="error" id="err-dietOther" hidden></div>
+            </div>
+          </div>
+
+          <div class="col-span-6 field">
+            <label class="label">Allergens</label>
+            <div id="allerChips" class="chip-group"></div>
+            <div id="allerOtherWrap" class="field" style="margin-top:8px" hidden>
+              <label class="label" for="allerOther">Other (required when selected)</label>
+              <input id="allerOther" class="input">
+              <div class="error" id="err-allergenOther" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <div class="row" style="margin-top:1.5rem">
+        <button class="btn btn--primary" type="submit">Post donation</button>
+        <div class="right"></div>
+        <button type="button" class="btn ghost" id="clearAll">Clear all</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Success Modal -->
+  <div id="sellModal" class="modal" style="display:none">
+    <button class="modal__scrim" aria-label="Close"></button>
+    <div class="modal__dialog">
+      <div class="modal__body" id="sellModalBody"></div>
+      <div class="modal__actions" id="sellModalActions">
+        <button class="btn btn--primary" id="sellModalClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© <span id="year">2025</span> ReServe</span> •
+    <span><a href="#">About Us</a></span> •
+    <span><a href="#">Contact</a></span>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="sell.js" defer></script>
+</body>
+</html>
