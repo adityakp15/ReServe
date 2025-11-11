@@ -179,7 +179,9 @@ a{
 }
 
 .btn.ghost:hover{
-  background:var(--surface);
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
 }
 
 .btn--primary{
@@ -357,8 +359,11 @@ input[type="number"]{
   transition:background .2s, color .2s, border-color .2s, transform .06s;
 }
 
+/* Inactive chip hover: green with white text */
 .chip:hover{
-  background:var(--surface);
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
   transform:translateY(-1px);
 }
 
@@ -366,6 +371,14 @@ input[type="number"]{
   background:var(--primary);
   color:#fff;
   border-color:var(--primary);
+}
+
+/* Active chip hover: white with green text (inverse) */
+.chip--active:hover{
+  background:#fff;
+  color:var(--primary);
+  border-color:var(--primary);
+  transform:translateY(-1px);
 }
 
 /* ====== Modal ====== */

@@ -7,7 +7,7 @@ const fmtUSD = n => `$${Number(n).toFixed(Number(n) % 1 === 0 ? 0 : 2)}`;
 const modal = {
   root: $('#modal-root'),
   content: $('#modal-content'),
-  savedContent: null, // Store previous modal content
+  savedContent: null, // Store previous modal content (actual DOM element, not clone)
   open(contentNode, extraClass=''){
     this.content.innerHTML = '';
     this.root.classList.remove('hidden');
@@ -17,17 +17,18 @@ const modal = {
     this.root.setAttribute('aria-hidden','false');
   },
   openNested(contentNode, extraClass=''){
-    // Save current content before opening nested modal
-    this.savedContent = this.content.cloneNode(true);
+    // Save current content by removing it (preserves event listeners)
+    this.savedContent = document.createDocumentFragment();
+    while(this.content.firstChild){
+      this.savedContent.appendChild(this.content.firstChild);
+    }
     this.open(contentNode, extraClass);
   },
   closeNested(){
-    // Restore previous modal content
+    // Restore previous modal content (with event listeners intact)
     if(this.savedContent){
       this.content.innerHTML = '';
-      while(this.savedContent.firstChild){
-        this.content.appendChild(this.savedContent.firstChild);
-      }
+      this.content.appendChild(this.savedContent);
       this.savedContent = null;
     }
   },
@@ -152,8 +153,8 @@ function openDetailModal(card){
   qtyRow.className = 'qty-row in-modal';
   qtyRow.innerHTML = `
     <select class="select select--sm qty"></select>
-    <button class="btn ghost icon minus">−</button>
-    <button class="btn ghost icon plus">+</button>
+    <button class="btn icon minus">−</button>
+    <button class="btn icon plus">+</button>
     <button class="btn ghost max">Max</button>
     <button class="btn ghost clear">Clear</button>
   `;

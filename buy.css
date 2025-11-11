@@ -152,7 +152,9 @@ body{
 }
 
 .btn.ghost:hover{
-  background:var(--surface);
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
 }
 
 .btn--primary{
@@ -186,6 +188,12 @@ body{
 /* Toggle button for Show Only Available */
 .toggle-btn{
   transition:background .2s, color .2s, border-color .2s, transform .06s;
+}
+
+.toggle-btn:not(.active):hover{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
 }
 
 .toggle-btn.active{
@@ -295,12 +303,14 @@ label{
   display:flex;
   flex-direction:column;
   min-height:200px;
+  position:relative;
 }
 
 .product-topline{
   display:flex;
-  align-items:center;
-  gap:8px;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
   margin-bottom:.5rem;
 }
 
@@ -309,6 +319,7 @@ label{
   font-size:1.15rem;
   font-weight:700;
   color:var(--text);
+  flex:1;
 }
 
 .link-like{
@@ -324,10 +335,12 @@ label{
   background:rgba(46,125,50,0.12);
   color:var(--primary-hover);
   border-radius:999px;
-  padding:4px 10px;
-  font-size:12px;
+  padding:6px 12px;
+  font-size:13px;
   font-weight:600;
   border:1px solid rgba(46,125,50,0.28);
+  white-space:nowrap;
+  flex-shrink:0;
 }
 
 .pill--fresh{
@@ -498,7 +511,22 @@ label{
 }
 
 .modal .btn.ghost:hover{
-  background:var(--surface-muted);
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+
+/* Modal - and + buttons should be green like on the card */
+.modal .qty-row .btn.icon.minus,
+.modal .qty-row .btn.icon.plus{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+
+.modal .qty-row .btn.icon.minus:hover,
+.modal .qty-row .btn.icon.plus:hover{
+  background:var(--primary-hover);
 }
 
 .modal-actions{
