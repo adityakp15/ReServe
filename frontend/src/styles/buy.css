@@ -279,16 +279,148 @@ label{
   }
 }
 
-.card-list{
-  display:grid;
-  grid-template-columns:repeat(3, 1fr);
+.card-grid-inline{
+  display:flex;
+  flex-wrap:wrap;
   gap:1.25rem;
   margin-top:1.5rem;
 }
 
-@media (max-width:900px){
-  .card-list{
-    grid-template-columns:1fr;
+.card-grid-inline .product{
+  width:360px;
+  min-height:580px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Adjustments for square tile layout */
+.card-grid-inline .product-image{
+  width:100%;
+  aspect-ratio:1;
+  overflow:hidden;
+  border-radius:8px;
+  margin-bottom:.75rem;
+  background:var(--surface-muted);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.card-grid-inline .product-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  transition:transform .3s ease;
+}
+
+.card-grid-inline .product:hover .product-image img{
+  transform:scale(1.05);
+}
+
+.card-grid-inline .product-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  min-height:0;
+  padding-bottom:.5rem;
+}
+
+.card-grid-inline .product-title{
+  font-size:1.05rem;
+  line-height:1.3;
+}
+
+.card-grid-inline .product .line-clamp-1{
+  display:-webkit-box;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  font-size:.9rem;
+  margin:.25rem 0;
+  line-height:1.4;
+}
+
+.card-grid-inline .product-meta{
+  margin-top:auto;
+  font-size:.85rem;
+}
+
+.card-grid-inline .meta-row{
+  font-size:.85rem;
+}
+
+.card-grid-inline .badges{
+  margin-top:.5rem;
+}
+
+.card-grid-inline .badge{
+  font-size:11px;
+  padding:2px 7px;
+}
+
+.card-grid-inline .product-inv{
+  margin-top:.5rem;
+  margin-bottom:.5rem;
+  font-size:.85rem;
+}
+
+.card-grid-inline .product-cta{
+  padding-top:1rem;
+  margin-top:auto;
+}
+
+.card-grid-inline .qty-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-bottom:.75rem;
+}
+
+.card-grid-inline .qty-row .select{
+  display:none;
+}
+
+.card-grid-inline .qty-row .btn.icon{
+  width:38px;
+  height:38px;
+  padding:.5rem;
+  font-size:1.1rem;
+  border-radius:50%;
+  flex-shrink:0;
+}
+
+.card-grid-inline .qty-row .ghost{
+  display:none;
+}
+
+.card-grid-inline .qty-display{
+  min-width:32px;
+  text-align:center;
+  font-weight:700;
+  font-size:1.1rem;
+  color:var(--text);
+}
+
+.card-grid-inline .btn.reserve{
+  padding:.7rem 1rem;
+  font-size:.95rem;
+}
+
+@media (max-width:1200px){
+  .card-list,
+  .card-grid{
+    grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width:720px){
+  .card-list,
+  .card-grid{
+    grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
   }
 }
 
@@ -466,7 +598,7 @@ label{
   border-radius:var(--radius);
   border:1px solid var(--border);
   box-shadow:0 10px 30px rgba(0,0,0,.18);
-  width:min(820px,92vw);
+  width:min(520px,92vw);
   max-height:90vh;
   overflow:auto;
   margin:0;
@@ -477,8 +609,92 @@ label{
 }
 
 /* Modal product detail */
+.modal-product-image{
+  width:100%;
+  max-width:300px;
+  aspect-ratio:1;
+  overflow:hidden;
+  border-radius:8px;
+  margin:0 auto 1rem auto;
+  background:var(--surface-muted);
+}
+
+.modal-product-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
 .modal .product-detail .product-topline{
-  margin-bottom:.75rem;
+  margin-bottom:1rem;
+}
+
+.modal-section{
+  margin:1.25rem 0;
+  padding-bottom:1rem;
+  border-bottom:1px solid var(--border);
+}
+
+.modal-section:last-of-type{
+  border-bottom:none;
+}
+
+.modal-section-title{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--text);
+  margin:0 0 .75rem 0;
+}
+
+.modal-ingredients{
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.nutrition-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:.75rem;
+}
+
+.nutrition-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.75rem;
+  background:var(--surface-muted);
+  border-radius:8px;
+  border:1px solid var(--border);
+}
+
+.nutrition-label{
+  font-size:.9rem;
+  color:var(--muted);
+  font-weight:600;
+}
+
+.nutrition-value{
+  font-size:1rem;
+  color:var(--text);
+  font-weight:700;
+}
+
+.pickup-instructions{
+  margin-top:.75rem;
+  padding:.75rem;
+  background:rgba(46,125,50,0.08);
+  border-left:3px solid var(--primary);
+  border-radius:4px;
+  font-size:.9rem;
+}
+
+.modal-price{
+  font-size:1rem;
+  margin:1rem 0;
+  padding:1rem;
+  background:var(--surface-muted);
+  border-radius:8px;
+  text-align:center;
 }
 
 .modal .product-detail .muted{
