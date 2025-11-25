@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import Navigation from '../components/Navigation';
+import { authAPI, setAuthToken, setUserData } from '../utils/api';
 import '../styles/signup.css';
 
 function Signup() {
@@ -10,7 +12,7 @@ function Signup() {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: ''
+    role: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -25,12 +27,13 @@ function Signup() {
     setSuccess(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
 
     // Validation
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword || !formData.accountType) {
+    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword || !formData.role) {
       setError('Please complete all fields and select an account type.');
       return;
     }
@@ -52,31 +55,67 @@ function Signup() {
       return;
     }
 
-    // Success
-    console.log('Form Submitted', {
-      fullName: formData.fullName,
-      email: formData.email,
-      accountType: formData.accountType
-    });
-
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      setFormData({
-        fullName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        accountType: ''
-      });
-      // Optionally navigate to login
-      // navigate('/login');
-    }, 2500);
+    try {
+      const response = await authAPI.signup(
+        formData.email, 
+        formData.password, 
+        formData.fullName,
+        formData.role
+      );
+      
+      // Store auth data
+      setAuthToken(response.token);
+      setUserData(response.user);
+      
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/home');
+      }, 1500);
+    } catch (error) {
+      setError(error.message || 'Signup failed. Please try again.');
+      console.error('Signup error:', error);
+    }
   };
 
-  const handleGoogleSignup = () => {
-    console.log('Google signup clicked');
-    // Placeholder for Google OAuth integration
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setSuccess(false);
+    
+    try {
+      // If no role selected yet, show error
+      if (!formData.role) {
+        setError('Please select an account type before signing up with Google.');
+        return;
+      }
+
+      const response = await authAPI.googleLogin(
+        credentialResponse.credential, 
+        formData.role
+      );
+      
+      // Store auth data
+      setAuthToken(response.token);
+      setUserData(response.user);
+      
+      console.log('Google signup successful:', response.user);
+      
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/home');
+      }, 1500);
+    } catch (error) {
+      if (error.message.includes('needsRole')) {
+        setError('Please select an account type before signing up with Google.');
+      } else {
+        setError(error.message || 'Google signup failed. Please try again.');
+      }
+      console.error('Google signup error:', error);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google signup failed. Please try again.');
+    console.error('Google signup failed');
   };
 
   return (
@@ -160,10 +199,10 @@ function Signup() {
                 <label className="radio">
                   <input 
                     type="radio" 
-                    name="accountType" 
+                    name="role" 
                     value="student" 
                     required
-                    checked={formData.accountType === 'student'}
+                    checked={formData.role === 'student'}
                     onChange={handleChange}
                   />
                   <span>Student</span>
@@ -171,9 +210,9 @@ function Signup() {
                 <label className="radio">
                   <input 
                     type="radio" 
-                    name="accountType" 
-                    value="dining"
-                    checked={formData.accountType === 'dining'}
+                    name="role" 
+                    value="dining_hall_staff"
+                    checked={formData.role === 'dining_hall_staff'}
                     onChange={handleChange}
                   />
                   <span>Dining Hall Staff</span>
@@ -181,51 +220,31 @@ function Signup() {
                 <label className="radio">
                   <input 
                     type="radio" 
-                    name="accountType" 
-                    value="nonprofit"
-                    checked={formData.accountType === 'nonprofit'}
+                    name="role" 
+                    value="nonprofit_coordinator"
+                    checked={formData.role === 'nonprofit_coordinator'}
                     onChange={handleChange}
                   />
-                  <span>Nonprofit Partner</span>
+                  <span>Nonprofit Coordinator</span>
                 </label>
               </div>
             </fieldset>
 
             <button type="submit" className="btn btn-primary">Create Account</button>
-            <button
-              type="button"
-              className="btn google-btn"
-              onClick={handleGoogleSignup}
-              aria-label="Sign up with Google"
-            >
-              <svg
-                className="google-icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  fill="#4285F4"
-                  d="M23.49 12.27c0-.83-.07-1.63-.2-2.4H12v4.55h6.48c-.28 1.45-1.13 2.68-2.4 3.5v2.9h3.88c2.27-2.09 3.58-5.17 3.58-8.55z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.96-1.08 7.95-2.95l-3.88-2.9c-1.08.73-2.46 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.95H1.26v3.11C3.24 21.53 7.3 24 12 24z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.27 14.36c-.24-.73-.38-1.51-.38-2.36s.14-1.63.38-2.36V6.53H1.26A11.99 11.99 0 0 0 0 12c0 1.92.46 3.72 1.26 5.47l4.01-3.11z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.74c1.76 0 3.33.61 4.57 1.81l3.42-3.42C17.94 1.2 15.22 0 12 0 7.3 0 3.24 2.47 1.26 6.53l4.01 3.11c.95-2.84 3.6-4.9 6.73-4.9z"
-                />
-              </svg>
-              Sign up with Google
-            </button>
+            
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                text="signup_with"
+                width="100%"
+              />
+            </div>
 
             <p className="login-hint">
-              Already have an account?
+              Already have an account?{' '}
               <a className="login-link" href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>
                 Log In
               </a>

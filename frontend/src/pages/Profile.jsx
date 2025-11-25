@@ -1,105 +1,176 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { getUserData, clearAuthData, authAPI } from '../utils/api';
 import '../styles/profile.css';
 
 function Profile() {
-  const handleEdit = (section) => {
-    console.log('Edit clicked for:', section);
-    // Handle edit functionality
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Try to get user from localStorage first
+    const localUser = getUserData();
+    if (localUser) {
+      setUser(localUser);
+      setLoading(false);
+    } else {
+      // If not in localStorage, fetch from API
+      fetchUserData();
+    }
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await authAPI.getCurrentUser();
+      setUser(response.user);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      setError('Failed to load profile. Please try logging in again.');
+      setLoading(false);
+      // Redirect to login after 2 seconds
+      setTimeout(() => navigate('/login'), 2000);
+    }
   };
+
+  const handleLogout = () => {
+    clearAuthData();
+    navigate('/login');
+  };
+
+  const getRoleDisplay = (role) => {
+    const roleMap = {
+      'student': 'Student',
+      'dining_hall_staff': 'Dining Hall Staff',
+      'nonprofit_coordinator': 'Nonprofit Coordinator'
+    };
+    // Convert any legacy admin roles to dining_hall_staff
+    if (role === 'admin') {
+      return 'Dining Hall Staff';
+    }
+    return roleMap[role] || role;
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete your account?\n\nThis will permanently delete:\n- Your profile information\n- All your donation history\n- All associated data\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    const confirmAgain = window.confirm(
+      'This is your last chance. Are you absolutely sure you want to delete your account? Type YES in the next prompt to confirm.'
+    );
+
+    if (!confirmAgain) return;
+
+    const finalConfirm = window.prompt(
+      'Type "DELETE" (all caps) to permanently delete your account:'
+    );
+
+    if (finalConfirm !== 'DELETE') {
+      alert('Account deletion cancelled. The text did not match.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authAPI.deleteAccount();
+      alert('Your account has been permanently deleted.');
+      clearAuthData();
+      navigate('/login');
+    } catch (error) {
+      console.error('Delete account error:', error);
+      alert(error.message || 'Failed to delete account. Please try again or contact support.');
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <main className="main">
+          <div style={{ textAlign: 'center', padding: '3rem' }}>
+            <p>Loading profile...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <>
+        <Navigation />
+        <main className="main">
+          <div style={{ textAlign: 'center', padding: '3rem' }}>
+            <p style={{ color: 'var(--danger)' }}>{error || 'No user data found'}</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
-      <Navigation wrapped={true} />
+      <Navigation />
 
       <main className="main">
         <header className="page-header">
-          <h1>Dining Hall Profile: <span className="hall-name">Main Campus Commons</span></h1>
-          <p className="page-subtitle">Manage your information and track your impact.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            {user.picture && (
+              <img 
+                src={user.picture} 
+                alt={user.name}
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  border: '2px solid var(--primary)'
+                }}
+              />
+            )}
+            <div>
+              <h1 style={{ margin: 0 }}>{user.name}</h1>
+              <p className="page-subtitle" style={{ margin: '0.25rem 0 0' }}>
+                {getRoleDisplay(user.role)}
+              </p>
+            </div>
+          </div>
         </header>
 
         <section className="cards-grid">
           <article className="card">
             <header className="card-header">
-              <h2>Organization Information</h2>
-              <button 
-                className="btn btn-text" 
-                aria-label="Edit Organization Information"
-                onClick={() => handleEdit('Organization Information')}
-              >
-                Edit
-              </button>
+              <h2>Account Information</h2>
             </header>
             <div className="card-body info-grid">
               <div>
-                <span className="label">Dining Hall Name:</span>
-                <span className="value">Main Campus Commons</span>
+                <span className="label">Full Name:</span>
+                <span className="value">{user.name}</span>
               </div>
-              <div>
-                <span className="label">University Affiliation:</span>
-                <span className="value">State University</span>
-              </div>
-              <div>
-                <span className="label">Campus Location:</span>
-                <span className="value">123 University Dr.</span>
-              </div>
-              <div>
-                <span className="label">Key Management Contact:</span>
-                <span className="value">Jane Doe (Manager)</span>
-              </div>
-            </div>
-          </article>
-
-          <article className="card">
-            <header className="card-header">
-              <h2>Contact & Operations</h2>
-              <button 
-                className="btn btn-text" 
-                aria-label="Edit Contact & Operations"
-                onClick={() => handleEdit('Contact & Operations')}
-              >
-                Edit
-              </button>
-            </header>
-            <div className="card-body info-grid">
               <div>
                 <span className="label">Email:</span>
-                <span className="value">dining-main@stateu.edu</span>
+                <span className="value">{user.email}</span>
               </div>
               <div>
-                <span className="label">Phone:</span>
-                <span className="value">(555) 123-4567</span>
+                <span className="label">Role:</span>
+                <span className="value">{getRoleDisplay(user.role)}</span>
               </div>
               <div>
-                <span className="label">Operating Hours:</span>
-                <span className="value">Mon–Fri, 7 AM – 9 PM</span>
-              </div>
-            </div>
-          </article>
-
-          <article className="card">
-            <header className="card-header">
-              <h2>Donation Preferences</h2>
-              <button 
-                className="btn btn-text" 
-                aria-label="Edit Donation Preferences"
-                onClick={() => handleEdit('Donation Preferences')}
-              >
-                Edit
-              </button>
-            </header>
-            <div className="card-body info-grid">
-              <div>
-                <span className="label">Preferred Food Categories:</span>
-                <span className="value">Entrees, Produce, Baked Goods</span>
+                <span className="label">Account ID:</span>
+                <span className="value">{user.id}</span>
               </div>
               <div>
-                <span className="label">Typical Donation Times:</span>
-                <span className="value">4 PM – 6 PM Daily</span>
-              </div>
-              <div>
-                <span className="label">Food Safety Guidelines:</span>
-                <span className="value">"All hot food must be held above 140°F…"</span>
+                <span className="label">Sign-in Method:</span>
+                <span className="value">{user.picture ? 'Google OAuth' : 'Email/Password'}</span>
               </div>
             </div>
           </article>
@@ -112,52 +183,44 @@ function Profile() {
               <div className="stats">
                 <div className="stat-card">
                   <span className="stat-label">Total Donations</span>
-                  <span className="stat-value">1,200</span>
+                  <span className="stat-value">0</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-label">Meals Provided</span>
-                  <span className="stat-value">2,500</span>
+                  <span className="stat-value">0</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-label">Pounds Diverted</span>
-                  <span className="stat-value">800 lbs</span>
+                  <span className="stat-value">0 lbs</span>
                 </div>
               </div>
 
               <div className="activity">
-                <h3 className="activity-title">Recent Donation Activity</h3>
-                <ul className="activity-list">
-                  <li>50 lbs of produce — Nov 8</li>
-                  <li>25 hot entrees — Nov 7</li>
-                  <li>30 baked goods — Nov 6</li>
-                </ul>
+                <h3 className="activity-title">Recent Activity</h3>
+                <p className="muted" style={{ marginTop: '0.5rem' }}>
+                  No recent activity. Start by creating or claiming donations!
+                </p>
               </div>
             </div>
           </article>
 
           <article className="card">
             <header className="card-header">
-              <h2>Account & Compliance</h2>
+              <h2>Account Settings</h2>
             </header>
             <div className="card-body action-list">
-              <a href="#" className="btn btn-secondary">Manage Team Members</a>
-              <a href="#" className="btn btn-secondary">Update Password</a>
-              <a href="#" className="btn btn-secondary">Manage Notifications</a>
-              <a href="#" className="btn btn-secondary">View Food Safety Certifications</a>
-              <a href="#" className="btn btn-secondary">View Partnership Agreements</a>
-              <a href="#" className="deactivate-link">Deactivate Account</a>
+              <button className="btn btn-primary" onClick={handleLogout}>
+                Sign Out
+              </button>
+              <button className="deactivate-link" onClick={handleDeleteAccount}>
+                Delete Account
+              </button>
             </div>
           </article>
         </section>
       </main>
 
-      <footer className="site-footer">
-        <div className="footer-inner">
-          <a href="#">About Us</a>
-          <span aria-hidden="true">•</span>
-          <a href="#">Contact</a>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import Navigation from '../components/Navigation';
+import { authAPI, setAuthToken, setUserData } from '../utils/api';
 import '../styles/styles.css';
 
 function Login() {
@@ -8,7 +10,6 @@ function Login() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: '',
     remember: false
   });
   const [error, setError] = useState('');
@@ -22,21 +23,59 @@ function Login() {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     // Validation
-    if (!formData.email || !formData.password || !formData.role) {
-      setError('Please complete all fields.');
+    if (!formData.email || !formData.password) {
+      setError('Please enter your email and password.');
       return;
     }
-    // Here you would make an API call
-    console.log('Login attempt:', formData);
-    // Navigate to home or dashboard on success
+
+    try {
+      const response = await authAPI.login(formData.email, formData.password);
+      
+      // Store auth data
+      setAuthToken(response.token);
+      setUserData(response.user);
+      
+      // Navigate to home
+      navigate('/home');
+    } catch (error) {
+      setError(error.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', error);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Google login clicked');
-    // Placeholder for Google OAuth integration
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    
+    try {
+      // Try logging in without role (for existing users)
+      const response = await authAPI.googleLogin(credentialResponse.credential, null);
+      
+      // Store auth data
+      setAuthToken(response.token);
+      setUserData(response.user);
+      
+      console.log('Google login successful:', response.user);
+      
+      // Navigate to home
+      navigate('/home');
+    } catch (error) {
+      if (error.message.includes('needsRole') || error.message.includes('Role is required')) {
+        setError('No account found. Please create an account first using the "Create an account" button below.');
+      } else {
+        setError(error.message || 'Google login failed. Please try again.');
+      }
+      console.error('Google login error:', error);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google login failed. Please try again.');
+    console.error('Google login failed');
   };
 
   return (
@@ -56,7 +95,7 @@ function Login() {
             </p>
             <ul className="benefits">
               <li className="benefit-item">
-                <span className="benefit-icon">⏱️</span>
+                <span className="benefit-icon">•</span>
                 <div>
                   <p className="benefit-title">Instant coordination</p>
                   <p className="muted small-text">
@@ -65,7 +104,7 @@ function Login() {
                 </div>
               </li>
               <li className="benefit-item">
-                <span className="benefit-icon">📋</span>
+                <span className="benefit-icon">•</span>
                 <div>
                   <p className="benefit-title">Seamless pickup workflows</p>
                   <p className="muted small-text">
@@ -74,7 +113,7 @@ function Login() {
                 </div>
               </li>
               <li className="benefit-item">
-                <span className="benefit-icon">📈</span>
+                <span className="benefit-icon">•</span>
                 <div>
                   <p className="benefit-title">Impact at a glance</p>
                   <p className="muted small-text">
@@ -122,23 +161,6 @@ function Login() {
                 <div className="hint">Minimum 8 characters. Never share your password.</div>
               </div>
 
-              <div className="field">
-                <label htmlFor="role">Role</label>
-                <select 
-                  id="role" 
-                  name="role" 
-                  required 
-                  aria-label="Select role"
-                  value={formData.role}
-                  onChange={handleChange}
-                >
-                  <option value="" disabled>Select your role</option>
-                  <option value="dining_hall_staff">Dining Hall Staff</option>
-                  <option value="nonprofit_coordinator">Nonprofit Coordinator</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
               <div className="kv">
                 <label style={{display:'flex', alignItems:'center', gap:'.5rem'}}>
                   <input 
@@ -154,37 +176,17 @@ function Login() {
               </div>
 
               <button className="btn" type="submit">Sign in</button>
-              <button
-                className="btn google-btn"
-                type="button"
-                onClick={handleGoogleLogin}
-                aria-label="Sign in with Google"
-              >
-                <svg
-                  className="google-icon"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    fill="#4285F4"
-                    d="M23.49 12.27c0-.83-.07-1.63-.2-2.4H12v4.55h6.48c-.28 1.45-1.13 2.68-2.4 3.5v2.9h3.88c2.27-2.09 3.58-5.17 3.58-8.55z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.96-1.08 7.95-2.95l-3.88-2.9c-1.08.73-2.46 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.95H1.26v3.11C3.24 21.53 7.3 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.27 14.36c-.24-.73-.38-1.51-.38-2.36s.14-1.63.38-2.36V6.53H1.26A11.99 11.99 0 0 0 0 12c0 1.92.46 3.72 1.26 5.47l4.01-3.11z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.74c1.76 0 3.33.61 4.57 1.81l3.42-3.42C17.94 1.2 15.22 0 12 0 7.3 0 3.24 2.47 1.26 6.53l4.01 3.11c.95-2.84 3.6-4.9 6.73-4.9z"
-                  />
-                </svg>
-                Sign in with Google
-              </button>
+              
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  width="100%"
+                />
+              </div>
               <button 
                 className="btn ghost" 
                 type="button" 
