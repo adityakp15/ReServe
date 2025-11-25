@@ -10,7 +10,7 @@
 ### 1. Clone and Install
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/adityakp15/ReServe.git
 cd ReServe
 ```
 
