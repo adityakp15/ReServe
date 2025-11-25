@@ -262,7 +262,12 @@ a{
 .action-list{
   display:flex;
   flex-wrap:wrap;
-  gap:.5rem;
+  gap:.75rem;
+  align-items:center;
+}
+
+.action-list .btn{
+  flex-shrink:0;
 }
 
 .deactivate-link{
@@ -271,6 +276,12 @@ a{
   font-weight:700;
   text-decoration:none;
   margin-top:.5rem;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:0;
+  font-family:inherit;
+  font-size:inherit;
 }
 
 .deactivate-link:hover{
