@@ -252,7 +252,11 @@ label{
 }
 
 .card.pad{
-  padding:1.25rem;
+  padding:1rem;
+}
+
+.card-grid-inline .product.pad{
+  padding:1rem;
 }
 
 .filters-card{
@@ -288,7 +292,6 @@ label{
 
 .card-grid-inline .product{
   width:360px;
-  min-height:580px;
   display:flex;
   flex-direction:column;
 }
@@ -320,11 +323,9 @@ label{
 }
 
 .card-grid-inline .product-body{
-  flex:1;
   display:flex;
   flex-direction:column;
   gap:.5rem;
-  min-height:0;
   padding-bottom:.5rem;
 }
 
@@ -344,7 +345,7 @@ label{
 }
 
 .card-grid-inline .product-meta{
-  margin-top:auto;
+  margin-top:.25rem;
   font-size:.85rem;
 }
 
@@ -353,7 +354,7 @@ label{
 }
 
 .card-grid-inline .badges{
-  margin-top:.5rem;
+  margin-top:.25rem;
 }
 
 .card-grid-inline .badge{
@@ -362,14 +363,14 @@ label{
 }
 
 .card-grid-inline .product-inv{
-  margin-top:.5rem;
-  margin-bottom:.5rem;
+  margin-top:.25rem;
+  margin-bottom:0;
   font-size:.85rem;
 }
 
 .card-grid-inline .product-cta{
-  padding-top:1rem;
-  margin-top:auto;
+  padding-top:.5rem;
+  margin-top:.5rem;
 }
 
 .card-grid-inline .qty-row{

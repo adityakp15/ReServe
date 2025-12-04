@@ -2,7 +2,7 @@ import express from 'express';
 import Order from '../models/Order.js';
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authorizeRoles } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -82,7 +82,7 @@ router.post('/', authenticateToken, async (req, res) => {
     await listing.save();
 
     // Populate order details
-    await order.populate('listing', 'title description location pickupWindowStart pickupWindowEnd price seller');
+    await order.populate('listing', 'title description location pickupWindowStart pickupWindowEnd price unitLabel availableUnits seller');
     await order.populate('buyer', 'name email picture');
     await order.populate('listing.seller', 'name email');
 
@@ -126,7 +126,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
     
     const orders = await Order.find(query)
-      .populate('listing', 'title description location pickupWindowStart pickupWindowEnd price image')
+      .populate('listing', 'title description location pickupWindowStart pickupWindowEnd price unitLabel availableUnits image')
       .populate('buyer', 'name email picture')
       .sort({ createdAt: -1 })
       .lean();
@@ -216,8 +216,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 // @route   PATCH /api/orders/:id/confirm
 // @desc    Confirm an order (seller action)
-// @access  Private
-router.patch('/:id/confirm', authenticateToken, async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
+router.patch('/:id/confirm', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('listing');
@@ -259,8 +259,8 @@ router.patch('/:id/confirm', authenticateToken, async (req, res) => {
 
 // @route   PATCH /api/orders/:id/picked-up
 // @desc    Mark order as picked up (seller action)
-// @access  Private
-router.patch('/:id/picked-up', authenticateToken, async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
+router.patch('/:id/picked-up', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('listing');

@@ -1,14 +1,14 @@
 import express from 'express';
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authorizeRoles } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // @route   POST /api/listings
 // @desc    Create a new listing (sell food)
-// @access  Private
-router.post('/', authenticateToken, async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
+router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
   try {
     const {
       title,
@@ -286,6 +286,11 @@ router.get('/', async (req, res) => {
       formatted.desc = listing.description;
       formatted.fullDesc = listing.fullDescription || listing.description;
       
+      // Ensure id field exists (use _id if id doesn't exist)
+      if (!formatted.id && formatted._id) {
+        formatted.id = formatted._id.toString();
+      }
+      
       return formatted;
     });
 
@@ -394,8 +399,8 @@ router.get('/seller/my', authenticateToken, async (req, res) => {
 
 // @route   PATCH /api/listings/:id
 // @desc    Update a listing
-// @access  Private (only seller can update)
-router.patch('/:id', authenticateToken, async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
+router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
 
@@ -443,8 +448,8 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 
 // @route   DELETE /api/listings/:id
 // @desc    Delete a listing
-// @access  Private (only seller can delete)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
+router.delete('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
 
