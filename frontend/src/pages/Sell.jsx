@@ -331,6 +331,9 @@ function Sell() {
                 <label className="label" htmlFor="location">Location <span className="req">*</span></label>
                 <input id="location" className="input" required value={formData.location} onChange={handleChange} name="location" />
                 <div className="hint">Building / entrance / desk (e.g., "ISR Main Entrance").</div>
+                <div className="hint" style={{ marginTop: '0.5rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                  <strong>Disclaimer:</strong> For listings to appear in the dining hall filter, please include one of these names in your location: <strong>"Ikenberry Dining"</strong>, <strong>"ISR"</strong>, or <strong>"FAR"</strong> (e.g., "Ikenberry Dining - Main Entrance", "ISR Main Entrance", "FAR Dining Hall").
+                </div>
                 {errors.location && <div className="error">{errors.location}</div>}
               </div>
               <div className="col-span-3 field">

@@ -135,21 +135,10 @@ router.get('/', authenticateToken, async (req, res) => {
     const formattedOrders = orders.map(order => {
       const formatted = { ...order };
       
+      // Keep raw pickupWindowStart and pickupWindowEnd dates for frontend formatting
+      // Frontend will format these dates directly
+      
       if (order.listing) {
-        // Format time
-        if (order.listing.pickupWindowStart && order.listing.pickupWindowEnd) {
-          const formatTime = (date) => {
-            const d = new Date(date);
-            const hours = d.getHours();
-            const minutes = d.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            const displayMinutes = minutes.toString().padStart(2, '0');
-            return `${displayHours}:${displayMinutes} ${ampm}`;
-          };
-          formatted.pickupTime = `${formatTime(order.listing.pickupWindowStart)} – ${formatTime(order.listing.pickupWindowEnd)}`;
-        }
-        
         formatted.listingTitle = order.listing.title;
         formatted.listingLocation = order.listing.location;
       }
