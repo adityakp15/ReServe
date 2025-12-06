@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/auth.js";
 import listingRoutes from "./routes/listings.js";
 import orderRoutes from "./routes/orders.js";
+import { scheduleDailyCleanup } from "./jobs/cleanup.js";
 
 // Load environment variables
 dotenv.config();
@@ -17,7 +18,11 @@ app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected successfully"))
+  .then(() => {
+    console.log("MongoDB connected successfully");
+    // Start daily cleanup job for expired listings
+    scheduleDailyCleanup();
+  })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
     process.exit(1);

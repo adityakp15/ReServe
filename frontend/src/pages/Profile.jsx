@@ -323,7 +323,7 @@ function Profile() {
 
                     const formatStatus = (status) => {
                       const statusMap = {
-                        'pending': { text: 'Pending', color: '#f59e0b' },
+                        'pending': { text: 'Ordered', color: '#f59e0b' },
                         'confirmed': { text: 'Confirmed', color: '#3b82f6' },
                         'picked_up': { text: 'Picked Up', color: '#10b981' },
                         'cancelled': { text: 'Cancelled', color: '#ef4444' },
@@ -381,12 +381,56 @@ function Profile() {
                               <strong>{order.pickupLocation}</strong>
                             </div>
                           )}
-                          {order.pickupTime && (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup Window: </span>
-                              <strong>{order.pickupTime}</strong>
-                            </div>
-                          )}
+                          {(() => {
+                            const formatPickupWindow = (start, end) => {
+                              if (!start || !end) return 'N/A';
+                              const startDate = new Date(start);
+                              const endDate = new Date(end);
+                              const formatDateTime = (date) => {
+                                const hours = date.getHours();
+                                const minutes = date.getMinutes();
+                                const ampm = hours >= 12 ? 'PM' : 'AM';
+                                const displayHours = hours % 12 || 12;
+                                const displayMinutes = minutes.toString().padStart(2, '0');
+                                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                                const day = date.getDate();
+                                const year = date.getFullYear();
+                                return `${month} ${day}, ${year} ${displayHours}:${displayMinutes} ${ampm}`;
+                              };
+                              // If same day, show date once
+                              const isSameDay = startDate.toDateString() === endDate.toDateString();
+                              if (isSameDay) {
+                                const month = startDate.toLocaleDateString('en-US', { month: 'short' });
+                                const day = startDate.getDate();
+                                const year = startDate.getFullYear();
+                                const startTime = `${startDate.getHours() % 12 || 12}:${startDate.getMinutes().toString().padStart(2, '0')} ${startDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+                                const endTime = `${endDate.getHours() % 12 || 12}:${endDate.getMinutes().toString().padStart(2, '0')} ${endDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+                                return `${month} ${day}, ${year} ${startTime} – ${endTime}`;
+                              } else {
+                                return `${formatDateTime(startDate)} – ${formatDateTime(endDate)}`;
+                              }
+                            };
+                            
+                            const pickupStart = order.pickupWindowStart || (order.listing && order.listing.pickupWindowStart);
+                            const pickupEnd = order.pickupWindowEnd || (order.listing && order.listing.pickupWindowEnd);
+                            
+                            if (pickupStart && pickupEnd) {
+                              return (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup Window: </span>
+                                  <strong>{formatPickupWindow(pickupStart, pickupEnd)}</strong>
+                                </div>
+                              );
+                            } else if (order.pickupTime) {
+                              return (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup Window: </span>
+                                  <strong>{order.pickupTime}</strong>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       </div>
                     );

@@ -72,6 +72,35 @@ function Buy() {
 
   const fmtUSD = (n) => `$${Number(n).toFixed(Number(n) % 1 === 0 ? 0 : 2)}`;
 
+  const formatPickupWindow = (start, end) => {
+    if (!start || !end) return 'N/A';
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const formatDateTime = (date) => {
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      const displayMinutes = minutes.toString().padStart(2, '0');
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      const day = date.getDate();
+      const year = date.getFullYear();
+      return `${month} ${day}, ${year} ${displayHours}:${displayMinutes} ${ampm}`;
+    };
+    // If same day, show date once
+    const isSameDay = startDate.toDateString() === endDate.toDateString();
+    if (isSameDay) {
+      const month = startDate.toLocaleDateString('en-US', { month: 'short' });
+      const day = startDate.getDate();
+      const year = startDate.getFullYear();
+      const startTime = `${startDate.getHours() % 12 || 12}:${startDate.getMinutes().toString().padStart(2, '0')} ${startDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+      const endTime = `${endDate.getHours() % 12 || 12}:${endDate.getMinutes().toString().padStart(2, '0')} ${endDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+      return `${month} ${day}, ${year} ${startTime} – ${endTime}`;
+    } else {
+      return `${formatDateTime(startDate)} – ${formatDateTime(endDate)}`;
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     // Filtering is now handled by the API, but we can add client-side filtering if needed
     return products;
@@ -243,7 +272,7 @@ function Buy() {
                   onChange={handleFilterChange}
                 >
                   <option>All</option>
-                  <option>Ikenberry</option>
+                  <option>Ikenberry Dining</option>
                   <option>ISR</option>
                   <option>FAR</option>
                 </select>
@@ -329,9 +358,6 @@ function Buy() {
                       >
                         {product.title}
                       </button>
-                      <span className="pill pill--fresh">
-                        <span className="mins">{product.fresh}</span> mins
-                      </span>
                     </div>
 
                     <div className="product-meta">
@@ -341,12 +367,18 @@ function Buy() {
                       </div>
                       <div className="meta-row">
                         <span className="emoji">⏰</span>
-                        <span>{product.time}</span>
+                        <span>{product.pickupWindowStart && product.pickupWindowEnd ? formatPickupWindow(product.pickupWindowStart, product.pickupWindowEnd) : product.time || 'N/A'}</span>
                       </div>
-                      <div className="badges">
-                        <span className={`badge ${getBadgeClass(product.tags)}`}>{product.tags}</span>
-                        <span className="badge badge--allergen">Allergens: {product.allergens}</span>
-                      </div>
+                      {(product.tags || (product.allergens && product.allergens !== 'None')) && (
+                        <div className="badges">
+                          {product.tags && (
+                            <span className={`badge ${getBadgeClass(product.tags)}`}>{product.tags}</span>
+                          )}
+                          {product.allergens && product.allergens !== 'None' && (
+                            <span className="badge badge--allergen">Allergens: {product.allergens}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="product-inv muted">
@@ -421,9 +453,6 @@ function Buy() {
                 <div className="product-detail">
                   <div className="product-topline">
                     <h3>{modal.product.title}</h3>
-                    <span className="pill pill--fresh">
-                      <span className="mins">{modal.product.fresh}</span> mins
-                    </span>
                   </div>
 
                   <div className="modal-section">
@@ -471,7 +500,7 @@ function Buy() {
                       </div>
                       <div className="meta-row">
                         <span className="emoji">⏰</span>
-                        <span>{modal.product.time}</span>
+                        <span>{modal.product.pickupWindowStart && modal.product.pickupWindowEnd ? formatPickupWindow(modal.product.pickupWindowStart, modal.product.pickupWindowEnd) : modal.product.time || 'N/A'}</span>
                       </div>
                     </div>
                     {modal.product.pickupInstructions && (
@@ -479,12 +508,18 @@ function Buy() {
                     )}
                   </div>
 
-                  <div className="modal-section">
-                    <div className="badges">
-                      <span className={`badge ${getBadgeClass(modal.product.tags)}`}>{modal.product.tags}</span>
-                      <span className="badge badge--allergen">Allergens: {modal.product.allergens}</span>
+                  {(modal.product.tags || (modal.product.allergens && modal.product.allergens !== 'None')) && (
+                    <div className="modal-section">
+                      <div className="badges">
+                        {modal.product.tags && (
+                          <span className={`badge ${getBadgeClass(modal.product.tags)}`}>{modal.product.tags}</span>
+                        )}
+                        {modal.product.allergens && modal.product.allergens !== 'None' && (
+                          <span className="badge badge--allergen">Allergens: {modal.product.allergens}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="product-inv muted modal-price">
                     <strong>{(modal.product.available || modal.product.availableUnits || 0)} {modal.product.unitLabel || 'meals'} available</strong> • {fmtUSD(modal.product.price)} per {modal.product.unitLabel || 'meal'}

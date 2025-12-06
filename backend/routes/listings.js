@@ -182,9 +182,16 @@ router.get('/', async (req, res) => {
       query.sellerType = sellerType;
     }
 
-    // Filter by adding dining hall check (Strict matched against diningHall field only)
+    // Filter by dining hall (match against diningHall field only, not location)
     if (hall && hall !== 'All') {
-      query.diningHall = { $regex: hall, $options: 'i' };
+      // Escape special regex characters and match against diningHall field (case-insensitive)
+      const escapedHall = hall.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.diningHall = { 
+        $exists: true, 
+        $ne: null,
+        $regex: escapedHall, 
+        $options: 'i' 
+      };
     }
 
     // Filter by max price
@@ -251,19 +258,8 @@ router.get('/', async (req, res) => {
     const formattedListings = listings.map(listing => {
       const formatted = { ...listing };
 
-      // Format time
-      if (listing.pickupWindowStart && listing.pickupWindowEnd) {
-        const formatTime = (date) => {
-          const d = new Date(date);
-          const hours = d.getHours();
-          const minutes = d.getMinutes();
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayHours = hours % 12 || 12;
-          const displayMinutes = minutes.toString().padStart(2, '0');
-          return `${displayHours}:${displayMinutes} ${ampm}`;
-        };
-        formatted.time = `${formatTime(listing.pickupWindowStart)} – ${formatTime(listing.pickupWindowEnd)}`;
-      }
+      // Keep raw pickupWindowStart and pickupWindowEnd dates for frontend formatting
+      // No formatting needed here - frontend will handle it
 
       // Calculate fresh minutes
       if (listing.pickupWindowEnd) {
