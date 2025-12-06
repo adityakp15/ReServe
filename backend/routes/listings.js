@@ -39,25 +39,25 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprof
 
     // Validation
     if (!title || !desc || !units || !price || !location || !winFrom || !winTo || !stype || !cname || !cemail || !cphone) {
-      return res.status(400).json({ 
-        error: 'Missing required fields' 
+      return res.status(400).json({
+        error: 'Missing required fields'
       });
     }
 
     // Validate seller type specific fields
     if (stype === 'Dining Hall' && !dhall) {
-      return res.status(400).json({ 
-        error: 'Dining hall is required for Dining Hall seller type' 
+      return res.status(400).json({
+        error: 'Dining hall is required for Dining Hall seller type'
       });
     }
     if (stype === 'Restaurant' && !rname) {
-      return res.status(400).json({ 
-        error: 'Restaurant name is required for Restaurant seller type' 
+      return res.status(400).json({
+        error: 'Restaurant name is required for Restaurant seller type'
       });
     }
     if (stype === 'RSO' && !rsoname) {
-      return res.status(400).json({ 
-        error: 'RSO name is required for RSO seller type' 
+      return res.status(400).json({
+        error: 'RSO name is required for RSO seller type'
       });
     }
 
@@ -65,8 +65,8 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprof
     const pickupStart = new Date(winFrom);
     const pickupEnd = new Date(winTo);
     if (pickupEnd <= pickupStart) {
-      return res.status(400).json({ 
-        error: 'Pickup window end must be after start' 
+      return res.status(400).json({
+        error: 'Pickup window end must be after start'
       });
     }
 
@@ -74,13 +74,13 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprof
     const availableUnits = parseInt(units);
     const unitPrice = parseFloat(price);
     if (isNaN(availableUnits) || availableUnits <= 0) {
-      return res.status(400).json({ 
-        error: 'Available units must be a positive integer' 
+      return res.status(400).json({
+        error: 'Available units must be a positive integer'
       });
     }
     if (isNaN(unitPrice) || unitPrice < 0) {
-      return res.status(400).json({ 
-        error: 'Price must be a valid non-negative number' 
+      return res.status(400).json({
+        error: 'Price must be a valid non-negative number'
       });
     }
 
@@ -97,7 +97,7 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprof
     } else if (typeof dietaryTags === 'string') {
       processedDietaryTags = [dietaryTags];
     }
-    
+
     // Process allergens - handle "Other" case
     let processedAllergens = allergens || [];
     if (Array.isArray(allergens)) {
@@ -146,9 +146,9 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprof
 
   } catch (error) {
     console.error('Create Listing Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create listing',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -182,9 +182,9 @@ router.get('/', async (req, res) => {
       query.sellerType = sellerType;
     }
 
-    // Filter by dining hall/location
+    // Filter by adding dining hall check (Strict matched against diningHall field only)
     if (hall && hall !== 'All') {
-      query.location = { $regex: hall, $options: 'i' };
+      query.diningHall = { $regex: hall, $options: 'i' };
     }
 
     // Filter by max price
@@ -209,7 +209,7 @@ router.get('/', async (req, res) => {
     }
 
     // Combine queries
-    const finalQuery = textSearchQuery 
+    const finalQuery = textSearchQuery
       ? { $and: [query, textSearchQuery] }
       : query;
 
@@ -223,9 +223,9 @@ router.get('/', async (req, res) => {
 
     // Filter by dietary tags if specified
     if (diet && diet !== 'All') {
-      listings = listings.filter(listing => 
-        listing.dietaryTags && 
-        listing.dietaryTags.some(tag => 
+      listings = listings.filter(listing =>
+        listing.dietaryTags &&
+        listing.dietaryTags.some(tag =>
           tag.toLowerCase().includes(diet.toLowerCase())
         )
       );
@@ -238,19 +238,19 @@ router.get('/', async (req, res) => {
       if (listing.pickupWindowEnd < now) {
         return false;
       }
-      
+
       // Update status if needed
       if (listing.availableUnits <= 0 && listing.status === 'active') {
         return false; // Don't show sold out items unless specifically requested
       }
-      
+
       return true;
     });
 
     // Format listings for frontend
     const formattedListings = listings.map(listing => {
       const formatted = { ...listing };
-      
+
       // Format time
       if (listing.pickupWindowStart && listing.pickupWindowEnd) {
         const formatTime = (date) => {
@@ -264,33 +264,33 @@ router.get('/', async (req, res) => {
         };
         formatted.time = `${formatTime(listing.pickupWindowStart)} – ${formatTime(listing.pickupWindowEnd)}`;
       }
-      
+
       // Calculate fresh minutes
       if (listing.pickupWindowEnd) {
         const minutes = Math.round((new Date(listing.pickupWindowEnd) - now) / (1000 * 60));
         formatted.fresh = Math.max(0, minutes);
       }
-      
+
       // Format tags
-      formatted.tags = listing.dietaryTags && listing.dietaryTags.length > 0 
-        ? listing.dietaryTags[0] 
+      formatted.tags = listing.dietaryTags && listing.dietaryTags.length > 0
+        ? listing.dietaryTags[0]
         : '';
-      
+
       // Format allergens
       formatted.allergens = listing.allergens && listing.allergens.length > 0
         ? listing.allergens.join(', ')
         : 'None';
-      
+
       formatted.available = listing.availableUnits;
       formatted.hall = listing.location;
       formatted.desc = listing.description;
       formatted.fullDesc = listing.fullDescription || listing.description;
-      
+
       // Ensure id field exists (use _id if id doesn't exist)
       if (!formatted.id && formatted._id) {
         formatted.id = formatted._id.toString();
       }
-      
+
       return formatted;
     });
 
@@ -302,9 +302,9 @@ router.get('/', async (req, res) => {
 
   } catch (error) {
     console.error('Get Listings Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch listings',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -334,9 +334,9 @@ router.get('/:id', async (req, res) => {
     if (error.name === 'CastError') {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch listing',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -354,7 +354,7 @@ router.get('/seller/my', authenticateToken, async (req, res) => {
     // Format listings
     const formattedListings = listings.map(listing => {
       const formatted = { ...listing };
-      
+
       if (listing.pickupWindowStart && listing.pickupWindowEnd) {
         const formatTime = (date) => {
           const d = new Date(date);
@@ -367,18 +367,18 @@ router.get('/seller/my', authenticateToken, async (req, res) => {
         };
         formatted.time = `${formatTime(listing.pickupWindowStart)} – ${formatTime(listing.pickupWindowEnd)}`;
       }
-      
-      formatted.tags = listing.dietaryTags && listing.dietaryTags.length > 0 
-        ? listing.dietaryTags.join(', ') 
+
+      formatted.tags = listing.dietaryTags && listing.dietaryTags.length > 0
+        ? listing.dietaryTags.join(', ')
         : '';
-      
+
       formatted.allergens = listing.allergens && listing.allergens.length > 0
         ? listing.allergens.join(', ')
         : 'None';
-      
+
       formatted.available = listing.availableUnits;
       formatted.hall = listing.location;
-      
+
       return formatted;
     });
 
@@ -390,9 +390,9 @@ router.get('/seller/my', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Get My Listings Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch your listings',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -410,8 +410,8 @@ router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'non
 
     // Check if user is the seller
     if (listing.seller.toString() !== req.user.id) {
-      return res.status(403).json({ 
-        error: 'You do not have permission to update this listing' 
+      return res.status(403).json({
+        error: 'You do not have permission to update this listing'
       });
     }
 
@@ -422,7 +422,7 @@ router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'non
       'contactPhone', 'dietaryTags', 'allergens', 'status', 'image',
       'fullDescription', 'ingredients', 'nutrition', 'pickupInstructions'
     ];
-    
+
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
         listing[field] = req.body[field];
@@ -439,9 +439,9 @@ router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'non
 
   } catch (error) {
     console.error('Update Listing Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update listing',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -459,8 +459,8 @@ router.delete('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'no
 
     // Check if user is the seller
     if (listing.seller.toString() !== req.user.id) {
-      return res.status(403).json({ 
-        error: 'You do not have permission to delete this listing' 
+      return res.status(403).json({
+        error: 'You do not have permission to delete this listing'
       });
     }
 
@@ -475,9 +475,9 @@ router.delete('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'no
 
   } catch (error) {
     console.error('Delete Listing Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to delete listing',
-      details: error.message 
+      details: error.message
     });
   }
 });

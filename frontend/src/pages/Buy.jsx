@@ -56,7 +56,7 @@ function Buy() {
   // Debounced search - auto-search after user stops typing
   useEffect(() => {
     if (isInitialMount.current) return; // Skip on initial mount
-    
+
     const searchTimeout = setTimeout(() => {
       fetchListings();
     }, 500); // Wait 500ms after user stops typing
@@ -153,7 +153,7 @@ function Buy() {
 
     // Get quantity - check both qtyOverride and quantities state using the correct productId
     const qty = qtyOverride ?? quantities[productId] ?? 0;
-    
+
     if (qty <= 0) {
       openError('Invalid Quantity', 'Please choose a quantity greater than 0.');
       return;
@@ -163,14 +163,14 @@ function Buy() {
       setReserving(true);
       // Create order via API
       await ordersAPI.createOrder(productId, qty);
-      
+
       // Show success message
       openSuccess(product, qty);
-      
+
       // Clear quantities
       setQty(productId, 0);
       setDetailQty(0);
-      
+
       // Refresh listings to update availability
       await fetchListings();
     } catch (error) {
@@ -203,9 +203,9 @@ function Buy() {
             <div className="filters-grid">
               <div className="field">
                 <label htmlFor="q">Search</label>
-                <input 
-                  id="q" 
-                  className="input" 
+                <input
+                  id="q"
+                  className="input"
                   placeholder="Search meals, tags, locations…"
                   value={filters.search}
                   onChange={handleFilterChange}
@@ -218,8 +218,8 @@ function Buy() {
 
               <div className="field">
                 <label htmlFor="diet">Dietary</label>
-                <select 
-                  id="diet" 
+                <select
+                  id="diet"
                   className="select"
                   value={filters.diet}
                   onChange={handleFilterChange}
@@ -236,14 +236,14 @@ function Buy() {
 
               <div className="field">
                 <label htmlFor="hall">Dining Hall</label>
-                <select 
-                  id="hall" 
+                <select
+                  id="hall"
                   className="select"
                   value={filters.hall}
                   onChange={handleFilterChange}
                 >
                   <option>All</option>
-                  <option>Ikenberry Dining</option>
+                  <option>Ikenberry</option>
                   <option>ISR</option>
                   <option>FAR</option>
                 </select>
@@ -251,10 +251,10 @@ function Buy() {
 
               <div className="field">
                 <label htmlFor="maxPrice">Max Price (USD)</label>
-                <input 
-                  id="maxPrice" 
-                  className="input" 
-                  inputMode="decimal" 
+                <input
+                  id="maxPrice"
+                  className="input"
+                  inputMode="decimal"
                   placeholder=""
                   value={filters.maxPrice}
                   onChange={handleFilterChange}
@@ -263,15 +263,15 @@ function Buy() {
             </div>
 
             <div className="filter-actions-row">
-              <button 
-                id="applyFilters" 
+              <button
+                id="applyFilters"
                 className="btn btn--primary"
                 onClick={() => fetchListings()}
               >
                 Apply filters
               </button>
-              <button 
-                id="clearFilters" 
+              <button
+                id="clearFilters"
                 className="btn ghost"
                 onClick={() => {
                   setFilters({ search: '', diet: 'All', hall: 'All', maxPrice: '' });
@@ -282,8 +282,8 @@ function Buy() {
               >
                 Reset
               </button>
-              <button 
-                id="onlyAvail" 
+              <button
+                id="onlyAvail"
                 className={`btn ghost toggle-btn ${onlyAvailable ? 'active' : ''}`}
                 onClick={() => setOnlyAvailable(!onlyAvailable)}
               >
@@ -425,7 +425,7 @@ function Buy() {
                       <span className="mins">{modal.product.fresh}</span> mins
                     </span>
                   </div>
-                  
+
                   <div className="modal-section">
                     <h4 className="modal-section-title">Description</h4>
                     <p className="muted">{modal.product.fullDesc || modal.product.desc}</p>
@@ -493,13 +493,13 @@ function Buy() {
                     {(() => {
                       const available = modal.product.available || modal.product.availableUnits || 0;
                       const modalProductId = modal.product.id || modal.product._id;
-                      
+
                       const handleDetailQtyChange = (newQty) => {
                         setDetailQty(newQty);
                         // Sync with quantities state
                         setQty(modalProductId, newQty);
                       };
-                      
+
                       return (
                         <>
                           <select
