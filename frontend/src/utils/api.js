@@ -1,5 +1,5 @@
 // API configuration and helper functions
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 // Store auth token in localStorage
 export const setAuthToken = (token) => {
@@ -104,6 +104,73 @@ export const authAPI = {
   deleteAccount: async () => {
     return apiRequest('/api/auth/delete', {
       method: 'DELETE',
+    });
+  },
+};
+
+// Listings API calls
+export const listingsAPI = {
+  // Get all listings with optional filters
+  getListings: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.diet && filters.diet !== 'All') params.append('diet', filters.diet);
+    if (filters.hall && filters.hall !== 'All') params.append('hall', filters.hall);
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+    if (filters.onlyAvailable) params.append('onlyAvailable', 'true');
+    
+    const queryString = params.toString();
+    return apiRequest(`/api/listings${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get a single listing by ID
+  getListing: async (listingId) => {
+    return apiRequest(`/api/listings/${listingId}`);
+  },
+
+  // Create a new listing (requires authentication)
+  createListing: async (listingData) => {
+    return apiRequest('/api/listings', {
+      method: 'POST',
+      body: JSON.stringify(listingData),
+    });
+  },
+
+  // Get current user's listings (requires authentication)
+  getMyListings: async () => {
+    return apiRequest('/api/listings/seller/my');
+  },
+};
+
+// Orders API calls
+export const ordersAPI = {
+  // Create a new order/reservation
+  createOrder: async (listingId, quantity) => {
+    return apiRequest('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify({ listingId, quantity }),
+    });
+  },
+
+  // Get user's orders
+  getMyOrders: async (type = 'all', status = 'all') => {
+    const params = new URLSearchParams();
+    if (type !== 'all') params.append('type', type);
+    if (status !== 'all') params.append('status', status);
+    const queryString = params.toString();
+    return apiRequest(`/api/orders${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Get a single order by ID
+  getOrder: async (orderId) => {
+    return apiRequest(`/api/orders/${orderId}`);
+  },
+
+  // Cancel an order
+  cancelOrder: async (orderId, reason) => {
+    return apiRequest(`/api/orders/${orderId}/cancel`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason }),
     });
   },
 };

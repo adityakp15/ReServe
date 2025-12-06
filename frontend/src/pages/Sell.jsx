@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { getUserData, isAuthenticated, listingsAPI } from '../utils/api';
 import '../styles/sell.css';
 
 function Sell() {
+  const navigate = useNavigate();
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  useEffect(() => {
+    // Check if user is authenticated and has permission
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
+    const user = getUserData();
+    if (user && user.role === 'student') {
+      setAccessDenied(true);
+    }
+  }, [navigate]);
   const DIETARY = ["Vegetarian", "Vegan", "Pescatarian", "High Protein", "Halal", "Gluten Free", "Other"];
   const ALLERGENS = ["Gluten", "Dairy", "Nuts", "Soy", "Eggs", "Shellfish", "Fish", "Sesame", "Other"];
 
@@ -31,6 +48,8 @@ function Sell() {
   const [selectedAllergens, setSelectedAllergens] = useState(new Set());
   const [errors, setErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const fmtUSD = (n) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 
@@ -142,13 +161,91 @@ function Sell() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
+    setSubmitError('');
+    
+    if (!validate()) {
+      return;
+    }
+
+    // Check authentication
+    if (!isAuthenticated()) {
+      setSubmitError('You must be logged in to create a listing.');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Prepare data for API
+      const listingData = {
+        title: formData.title.trim(),
+        desc: formData.desc.trim(),
+        units: parseInt(formData.units),
+        unitLabel: formData.unitLabel,
+        price: parseFloat(formData.price),
+        location: formData.location.trim(),
+        winFrom: formData.winFrom,
+        winTo: formData.winTo,
+        stype: formData.stype,
+        dhall: formData.dhall || null,
+        rname: formData.rname.trim() || null,
+        rsoname: formData.rsoname.trim() || null,
+        cname: formData.cname.trim(),
+        cemail: formData.cemail.trim(),
+        cphone: formData.cphone.trim(),
+        dietaryTags: Array.from(selectedDiet),
+        allergens: Array.from(selectedAllergens),
+        dietOther: formData.dietOther.trim() || null,
+        allerOther: formData.allerOther.trim() || null
+      };
+
+      // Create listing via API
+      await listingsAPI.createListing(listingData);
+
+      // Show success modal
       setShowModal(true);
+      
+      // Clear form after successful submission
       clearSection('all');
+    } catch (error) {
+      console.error('Failed to create listing:', error);
+      setSubmitError(error.message || 'Failed to create listing. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // Show access denied message for students
+  if (accessDenied) {
+    return (
+      <>
+        <Navigation />
+        <main className="container main-content">
+          <section className="hero">
+            <h1 className="h1">Access Denied</h1>
+            <div className="card pad" style={{ marginTop: '2rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚫</div>
+              <h2>You don't have permission to access this page</h2>
+              <p className="muted" style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+                Only sellers (Dining Hall Staff and Nonprofit Coordinators) can create listings.
+                As a student, you can browse and reserve available food on the Buy page.
+              </p>
+              <button 
+                className="btn btn--primary" 
+                onClick={() => navigate('/buy')}
+              >
+                Go to Buy Page
+              </button>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -371,10 +468,27 @@ function Sell() {
             </div>
           </section>
 
+          {submitError && (
+            <div className="error" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px' }}>
+              {submitError}
+            </div>
+          )}
+
           <div className="row" style={{marginTop:'1.5rem'}}>
-            <button className="btn btn--primary" type="submit">Post donation</button>
+            <button 
+              className="btn btn--primary" 
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? 'Posting...' : 'Post donation'}
+            </button>
             <div className="right"></div>
-            <button type="button" className="btn ghost" onClick={() => clearSection('all')}>
+            <button 
+              type="button" 
+              className="btn ghost" 
+              onClick={() => clearSection('all')}
+              disabled={submitting}
+            >
               Clear all
             </button>
           </div>

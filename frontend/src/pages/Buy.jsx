@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { listingsAPI, ordersAPI, isAuthenticated } from '../utils/api';
 import '../styles/buy.css';
 
 function Buy() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     search: '',
     diet: 'All',
@@ -11,101 +14,68 @@ function Buy() {
     maxPrice: ''
   });
   const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [products] = useState([
-    {
-      id: 1,
-      title: 'Veggie Pasta Primavera',
-      desc: 'Penne + seasonal vegetables, marinara; parmesan optional.',
-      fullDesc: 'Fresh penne pasta tossed with seasonal vegetables including bell peppers, zucchini, cherry tomatoes, and broccoli in a light marinara sauce. Topped with fresh basil and optional parmesan cheese. A hearty and healthy vegetarian option.',
-      hall: 'ISR – Main Entrance',
-      time: '03:19 AM – 04:25 AM',
-      available: 24,
-      price: 2.5,
-      fresh: 30,
-      tags: 'Vegetarian',
-      allergens: 'Gluten',
-      image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=300&fit=crop',
-      ingredients: 'Penne pasta, bell peppers, zucchini, cherry tomatoes, broccoli, marinara sauce, basil, olive oil, garlic, parmesan (optional)',
-      nutrition: { calories: 420, protein: '14g', carbs: '68g', fat: '10g' },
-      pickupInstructions: 'Please bring your own container. Items are kept warm in insulated containers at the main entrance desk.'
-    },
-    {
-      id: 2,
-      title: 'Grilled Chicken & Rice Bowl',
-      desc: 'Brown rice, steamed veggies, grilled chicken.',
-      fullDesc: 'Protein-packed bowl featuring tender grilled chicken breast over fluffy brown rice, accompanied by steamed seasonal vegetables including carrots, snap peas, and edamame. Finished with a light sesame-soy glaze.',
-      hall: 'Ikenberry Dining – South Lobby',
-      time: '03:28 AM – 04:43 AM',
-      available: 18,
-      price: 3.5,
-      fresh: 55,
-      tags: 'High Protein',
-      allergens: 'Soy',
-      image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
-      ingredients: 'Grilled chicken breast, brown rice, carrots, snap peas, edamame, sesame oil, soy sauce, ginger, garlic',
-      nutrition: { calories: 520, protein: '42g', carbs: '54g', fat: '12g' },
-      pickupInstructions: 'Available at the South Lobby service counter. Please show your reservation confirmation.'
-    },
-    {
-      id: 3,
-      title: 'Salmon Trays (6oz)',
-      desc: 'Baked salmon portions with lemon.',
-      fullDesc: 'Premium 6oz Atlantic salmon fillet, oven-baked to perfection with fresh lemon, dill, and a touch of olive oil. Served with roasted asparagus and herb-seasoned quinoa. Rich in omega-3 fatty acids.',
-      hall: 'FAR – Loading Bay Window',
-      time: '03:43 AM – 05:13 AM',
-      available: 10,
-      price: 5,
-      fresh: 80,
-      tags: 'Pescatarian',
-      allergens: 'Fish',
-      image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
-      ingredients: 'Atlantic salmon, lemon, dill, olive oil, asparagus, quinoa, garlic, herbs, sea salt, black pepper',
-      nutrition: { calories: 480, protein: '38g', carbs: '28g', fat: '22g' },
-      pickupInstructions: 'Pick up at the Loading Bay Window between specified hours. Meals are individually wrapped and labeled.'
-    }
-  ]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reserving, setReserving] = useState(false);
   const [quantities, setQuantities] = useState({});
   const [modal, setModal] = useState(null);
   const [detailQty, setDetailQty] = useState(0);
 
+  // Track if component has mounted to avoid fetching on initial render
+  const isInitialMount = useRef(true);
+
+  // Memoized fetch function that uses current filter values
+  const fetchListings = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await listingsAPI.getListings({
+        search: filters.search || undefined,
+        diet: filters.diet,
+        hall: filters.hall,
+        maxPrice: filters.maxPrice || undefined,
+        onlyAvailable: onlyAvailable
+      });
+      setProducts(response.listings || []);
+    } catch (error) {
+      console.error('Failed to fetch listings:', error);
+      setError('Failed to load listings. Please try again.');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters.search, filters.diet, filters.hall, filters.maxPrice, onlyAvailable]);
+
+  // Fetch listings from API on mount
+  useEffect(() => {
+    fetchListings();
+    isInitialMount.current = false;
+  }, []); // Only fetch on mount
+
+  // Debounced search - auto-search after user stops typing
+  useEffect(() => {
+    if (isInitialMount.current) return; // Skip on initial mount
+    
+    const searchTimeout = setTimeout(() => {
+      fetchListings();
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(searchTimeout);
+  }, [filters.search, fetchListings]); // Auto-search when search text changes
+
+  // Auto-apply filters when diet, hall, maxPrice, or onlyAvailable changes
+  useEffect(() => {
+    if (isInitialMount.current) return; // Skip on initial mount
+    fetchListings();
+  }, [filters.diet, filters.hall, filters.maxPrice, onlyAvailable, fetchListings]);
+
   const fmtUSD = (n) => `$${Number(n).toFixed(Number(n) % 1 === 0 ? 0 : 2)}`;
 
   const filteredProducts = useMemo(() => {
-    let filtered = [...products];
-
-    if (filters.search) {
-      const query = filters.search.toLowerCase();
-      filtered = filtered.filter((p) =>
-        p.title.toLowerCase().includes(query) ||
-        p.desc.toLowerCase().includes(query) ||
-        p.hall.toLowerCase().includes(query) ||
-        p.tags.toLowerCase().includes(query)
-      );
-    }
-
-    if (filters.diet !== 'All') {
-      filtered = filtered.filter((p) =>
-        p.tags.toLowerCase().includes(filters.diet.toLowerCase())
-      );
-    }
-
-    if (filters.hall !== 'All') {
-      filtered = filtered.filter((p) =>
-        p.hall.toLowerCase().includes(filters.hall.toLowerCase())
-      );
-    }
-
-    if (filters.maxPrice) {
-      const maxPrice = Number(filters.maxPrice);
-      filtered = filtered.filter((p) => p.price <= maxPrice);
-    }
-
-    if (onlyAvailable) {
-      filtered = filtered.filter((p) => p.available > 0);
-    }
-
-    return filtered;
-  }, [filters, onlyAvailable, products]);
+    // Filtering is now handled by the API, but we can add client-side filtering if needed
+    return products;
+  }, [products]);
 
   const handleFilterChange = (e) => {
     const key =
@@ -120,10 +90,18 @@ function Buy() {
     });
   };
 
+  // Handle Enter key in search input for immediate search
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      fetchListings();
+    }
+  };
+
   const setQty = (productId, value) => {
     setQuantities((prev) => {
-      const product = products.find((p) => p.id === productId);
-      const max = product ? product.available : 0;
+      const product = products.find((p) => (p.id === productId || p._id === productId));
+      const max = product ? (product.available || product.availableUnits || 0) : 0;
       return {
         ...prev,
         [productId]: Math.max(0, Math.min(max, value))
@@ -132,7 +110,13 @@ function Buy() {
   };
 
   const openDetail = (product) => {
-    setDetailQty(quantities[product.id] || 0);
+    const productId = product.id || product._id;
+    const currentQty = quantities[productId] || 0;
+    setDetailQty(currentQty);
+    // Sync detailQty with quantities state
+    if (currentQty > 0) {
+      setQty(productId, currentQty);
+    }
     setModal({ type: 'detail', product });
   };
 
@@ -152,15 +136,49 @@ function Buy() {
     setModal({ type: 'success', product, qty });
   };
 
-  const handleReserve = (product, qtyOverride) => {
-    const qty = qtyOverride ?? quantities[product.id] ?? 0;
-    if (qty <= 0) {
-      openError();
+  const handleReserve = async (product, qtyOverride) => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      openError('Authentication Required', 'Please log in to reserve food items.');
+      setTimeout(() => navigate('/login'), 2000);
       return;
     }
-    openSuccess(product, qty);
-    setQty(product.id, 0);
-    setDetailQty(0);
+
+    // Get the product ID (could be _id or id) - use same logic as UI
+    const productId = product.id || product._id;
+    if (!productId) {
+      openError('Error', 'Invalid listing. Please try again.');
+      return;
+    }
+
+    // Get quantity - check both qtyOverride and quantities state using the correct productId
+    const qty = qtyOverride ?? quantities[productId] ?? 0;
+    
+    if (qty <= 0) {
+      openError('Invalid Quantity', 'Please choose a quantity greater than 0.');
+      return;
+    }
+
+    try {
+      setReserving(true);
+      // Create order via API
+      await ordersAPI.createOrder(productId, qty);
+      
+      // Show success message
+      openSuccess(product, qty);
+      
+      // Clear quantities
+      setQty(productId, 0);
+      setDetailQty(0);
+      
+      // Refresh listings to update availability
+      await fetchListings();
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      openError('Reservation Failed', error.message || 'Failed to create reservation. Please try again.');
+    } finally {
+      setReserving(false);
+    }
   };
 
   const getBadgeClass = (tag) => {
@@ -191,7 +209,11 @@ function Buy() {
                   placeholder="Search meals, tags, locations…"
                   value={filters.search}
                   onChange={handleFilterChange}
+                  onKeyPress={handleSearchKeyPress}
                 />
+                <div className="hint" style={{ fontSize: '0.875rem', marginTop: '0.25rem', color: '#6b7280' }}>
+                  Press Enter to search immediately, or wait for auto-search
+                </div>
               </div>
 
               <div className="field">
@@ -244,7 +266,7 @@ function Buy() {
               <button 
                 id="applyFilters" 
                 className="btn btn--primary"
-                onClick={() => {/* Filters apply automatically */}}
+                onClick={() => fetchListings()}
               >
                 Apply filters
               </button>
@@ -254,6 +276,8 @@ function Buy() {
                 onClick={() => {
                   setFilters({ search: '', diet: 'All', hall: 'All', maxPrice: '' });
                   setOnlyAvailable(false);
+                  // Fetch after clearing filters
+                  setTimeout(() => fetchListings(), 100);
                 }}
               >
                 Reset
@@ -268,16 +292,33 @@ function Buy() {
             </div>
           </section>
 
+          {loading && (
+            <section className="card pad">
+              <p style={{ textAlign: 'center', padding: '2rem' }}>Loading listings...</p>
+            </section>
+          )}
+
+          {error && (
+            <section className="card pad">
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--danger)' }}>{error}</p>
+            </section>
+          )}
+
+          {!loading && !error && filteredProducts.length === 0 && (
+            <section className="card pad">
+              <p style={{ textAlign: 'center', padding: '2rem' }}>
+                No listings found. Check back later or try adjusting your filters.
+              </p>
+            </section>
+          )}
+
           <section className="card-grid-inline" id="cards">
-            {filteredProducts.map((product) => {
-              const qty = quantities[product.id] || 0;
+            {!loading && !error && filteredProducts.map((product) => {
+              const productId = product.id || product._id;
+              const qty = quantities[productId] || 0;
+              const available = product.available || product.availableUnits || 0;
               return (
-                <article key={product.id} className="card pad product">
-                  {product.image && (
-                    <div className="product-image">
-                      <img src={product.image} alt={product.title} />
-                    </div>
-                  )}
+                <article key={productId} className="card pad product">
                   <div className="product-body">
                     <div className="product-topline">
                       <button
@@ -309,7 +350,7 @@ function Buy() {
                     </div>
 
                     <div className="product-inv muted">
-                      <strong>{product.available} meals</strong> • {fmtUSD(product.price)}
+                      <strong>{available} {product.unitLabel || 'meals'}</strong> • {fmtUSD(product.price)}
                     </div>
                   </div>
 
@@ -318,9 +359,9 @@ function Buy() {
                       <select
                         className="select qty"
                         value={qty}
-                        onChange={(e) => setQty(product.id, Number(e.target.value))}
+                        onChange={(e) => setQty(productId, Number(e.target.value))}
                       >
-                        {Array.from({ length: product.available + 1 }, (_, i) => (
+                        {Array.from({ length: available + 1 }, (_, i) => (
                           <option key={i} value={i}>
                             {i}
                           </option>
@@ -329,7 +370,7 @@ function Buy() {
                       <button
                         type="button"
                         className="btn icon minus"
-                        onClick={() => setQty(product.id, qty - 1)}
+                        onClick={() => setQty(productId, qty - 1)}
                       >
                         −
                       </button>
@@ -337,21 +378,21 @@ function Buy() {
                       <button
                         type="button"
                         className="btn icon plus"
-                        onClick={() => setQty(product.id, qty + 1)}
+                        onClick={() => setQty(productId, qty + 1)}
                       >
                         +
                       </button>
                       <button
                         type="button"
                         className="btn ghost max"
-                        onClick={() => setQty(product.id, product.available)}
+                        onClick={() => setQty(productId, available)}
                       >
                         Max
                       </button>
                       <button
                         type="button"
                         className="btn ghost clear"
-                        onClick={() => setQty(product.id, 0)}
+                        onClick={() => setQty(productId, 0)}
                       >
                         Clear
                       </button>
@@ -360,8 +401,9 @@ function Buy() {
                       type="button"
                       className="btn btn--primary btn--block reserve"
                       onClick={() => handleReserve(product)}
+                      disabled={reserving || available === 0}
                     >
-                      {qty > 0 ? `Reserve • ${fmtUSD(qty * product.price)}` : 'Reserve'}
+                      {reserving ? 'Reserving...' : (qty > 0 ? `Reserve • ${fmtUSD(qty * product.price)}` : available === 0 ? 'Sold Out' : 'Reserve')}
                     </button>
                   </div>
                 </article>
@@ -377,11 +419,6 @@ function Buy() {
             <div className="modal__content">
               {modal.type === 'detail' && (
                 <div className="product-detail">
-                  {modal.product.image && (
-                    <div className="modal-product-image">
-                      <img src={modal.product.image} alt={modal.product.title} />
-                    </div>
-                  )}
                   <div className="product-topline">
                     <h3>{modal.product.title}</h3>
                     <span className="pill pill--fresh">
@@ -450,48 +487,66 @@ function Buy() {
                   </div>
 
                   <div className="product-inv muted modal-price">
-                    <strong>{modal.product.available} meals available</strong> • {fmtUSD(modal.product.price)} per meal
+                    <strong>{(modal.product.available || modal.product.availableUnits || 0)} {modal.product.unitLabel || 'meals'} available</strong> • {fmtUSD(modal.product.price)} per {modal.product.unitLabel || 'meal'}
                   </div>
                   <div className="qty-row in-modal">
-                    <select
-                      className="select select--sm qty"
-                      value={detailQty}
-                      onChange={(e) => setDetailQty(Math.max(0, Math.min(modal.product.available, Number(e.target.value))))}
-                    >
-                      {Array.from({ length: modal.product.available + 1 }, (_, i) => (
-                        <option key={i} value={i}>
-                          {i}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      className="btn icon minus"
-                      onClick={() => setDetailQty((prev) => Math.max(0, prev - 1))}
-                    >
-                      −
-                    </button>
-                    <button
-                      type="button"
-                      className="btn icon plus"
-                      onClick={() => setDetailQty((prev) => Math.min(modal.product.available, prev + 1))}
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      className="btn ghost max"
-                      onClick={() => setDetailQty(modal.product.available)}
-                    >
-                      Max
-                    </button>
-                    <button
-                      type="button"
-                      className="btn ghost clear"
-                      onClick={() => setDetailQty(0)}
-                    >
-                      Clear
-                    </button>
+                    {(() => {
+                      const available = modal.product.available || modal.product.availableUnits || 0;
+                      const modalProductId = modal.product.id || modal.product._id;
+                      
+                      const handleDetailQtyChange = (newQty) => {
+                        setDetailQty(newQty);
+                        // Sync with quantities state
+                        setQty(modalProductId, newQty);
+                      };
+                      
+                      return (
+                        <>
+                          <select
+                            className="select select--sm qty"
+                            value={detailQty}
+                            onChange={(e) => {
+                              const newQty = Math.max(0, Math.min(available, Number(e.target.value)));
+                              handleDetailQtyChange(newQty);
+                            }}
+                          >
+                            {Array.from({ length: available + 1 }, (_, i) => (
+                              <option key={i} value={i}>
+                                {i}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="btn icon minus"
+                            onClick={() => handleDetailQtyChange(Math.max(0, detailQty - 1))}
+                          >
+                            −
+                          </button>
+                          <button
+                            type="button"
+                            className="btn icon plus"
+                            onClick={() => handleDetailQtyChange(Math.min(available, detailQty + 1))}
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost max"
+                            onClick={() => handleDetailQtyChange(available)}
+                          >
+                            Max
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost clear"
+                            onClick={() => handleDetailQtyChange(0)}
+                          >
+                            Clear
+                          </button>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div className="modal-actions">
                     <button

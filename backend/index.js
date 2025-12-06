@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/auth.js";
+import listingRoutes from "./routes/listings.js";
+import orderRoutes from "./routes/orders.js";
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +30,12 @@ app.get("/api/hello", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+
+// Listing routes (sell)
+app.use("/api/listings", listingRoutes);
+
+// Order routes (buy/reservations)
+app.use("/api/orders", orderRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

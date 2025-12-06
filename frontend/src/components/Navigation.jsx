@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { isAuthenticated, clearAuthData } from '../utils/api';
+import { isAuthenticated, clearAuthData, getUserData } from '../utils/api';
 
 function Navigation({ wrapped = false, publicOnly = false }) {
   const location = useLocation();
@@ -11,10 +11,15 @@ function Navigation({ wrapped = false, publicOnly = false }) {
     navigate('/login');
   };
 
+  // Get user role to conditionally show/hide Sell link
+  const user = getUserData();
+  const isStudent = user && user.role === 'student';
+
   const fullLinks = [
     { label: 'Home', to: '/home' },
     { label: 'Buy', to: '/buy' },
-    { label: 'Sell', to: '/sell' },
+    // Only show Sell link if user is not a student
+    ...(isLoggedIn && !isStudent ? [{ label: 'Sell', to: '/sell' }] : []),
     { label: 'Profile', to: '/profile' },
     ...(isLoggedIn 
       ? [{ label: 'Sign Out', to: '#', onClick: handleSignOut, isButton: true }]

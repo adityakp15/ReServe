@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { getUserData, clearAuthData, authAPI } from '../utils/api';
+import { getUserData, clearAuthData, authAPI, ordersAPI, listingsAPI } from '../utils/api';
 import '../styles/profile.css';
 
 function Profile() {
@@ -10,6 +10,17 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersExpanded, setOrdersExpanded] = useState(false);
+  const [listings, setListings] = useState([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsExpanded, setListingsExpanded] = useState(false);
+  const [impactStats, setImpactStats] = useState({
+    totalDonations: 0,
+    mealsProvided: 0,
+    poundsDiverted: 0
+  });
 
   useEffect(() => {
     // Try to get user from localStorage first
@@ -22,6 +33,17 @@ function Profile() {
       fetchUserData();
     }
   }, []);
+
+  useEffect(() => {
+    // Fetch orders and listings when user is loaded
+    if (user) {
+      fetchOrders();
+      // If user is a seller, fetch their listings
+      if (user.role === 'dining_hall_staff' || user.role === 'nonprofit_coordinator') {
+        fetchListings();
+      }
+    }
+  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -36,6 +58,78 @@ function Profile() {
       setTimeout(() => navigate('/login'), 2000);
     }
   };
+
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await ordersAPI.getMyOrders('buying');
+      setOrders(response.orders || []);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const fetchListings = async () => {
+    try {
+      setListingsLoading(true);
+      const response = await listingsAPI.getMyListings();
+      setListings(response.listings || []);
+    } catch (error) {
+      console.error('Failed to fetch listings:', error);
+      setListings([]);
+    } finally {
+      setListingsLoading(false);
+    }
+  };
+
+  // Calculate impact stats
+  useEffect(() => {
+    if (!user) return;
+
+    const isSeller = user.role === 'dining_hall_staff' || user.role === 'nonprofit_coordinator';
+    
+    if (isSeller) {
+      // For sellers: calculate from listings
+      const totalDonations = listings.length;
+      let totalMeals = 0;
+      let totalPounds = 0;
+
+      listings.forEach(listing => {
+        const units = listing.availableUnits || 0;
+        if (listing.unitLabel === 'lbs') {
+          totalPounds += units;
+        } else if (listing.unitLabel === 'meals') {
+          totalMeals += units;
+        }
+        // For other unit labels, we could add them to meals or handle separately
+        // For simplicity, let's add trays/boxes/slices to meals count
+        if (['trays', 'boxes', 'slices'].includes(listing.unitLabel)) {
+          totalMeals += units;
+        }
+      });
+
+      setImpactStats({
+        totalDonations,
+        mealsProvided: totalMeals,
+        poundsDiverted: totalPounds
+      });
+    } else {
+      // For buyers/students: calculate from orders
+      // Count all quantities as meals/items bought
+      const totalMealsBought = orders.reduce((sum, order) => {
+        return sum + (order.quantity || 0);
+      }, 0);
+
+      setImpactStats({
+        totalDonations: 0,
+        mealsProvided: totalMealsBought,
+        poundsDiverted: 0
+      });
+    }
+  }, [user, listings, orders]);
 
   const handleLogout = () => {
     clearAuthData();
@@ -183,26 +277,327 @@ function Profile() {
               <div className="stats">
                 <div className="stat-card">
                   <span className="stat-label">Total Donations</span>
-                  <span className="stat-value">0</span>
+                  <span className="stat-value">{impactStats.totalDonations}</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-label">Meals Provided</span>
-                  <span className="stat-value">0</span>
+                  <span className="stat-label">
+                    {user?.role === 'student' ? 'Meals Bought' : 'Meals Provided'}
+                  </span>
+                  <span className="stat-value">{impactStats.mealsProvided}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-label">Pounds Diverted</span>
-                  <span className="stat-value">0 lbs</span>
+                  <span className="stat-value">
+                    {impactStats.poundsDiverted > 0 ? `${impactStats.poundsDiverted} lbs` : '0 lbs'}
+                  </span>
                 </div>
-              </div>
-
-              <div className="activity">
-                <h3 className="activity-title">Recent Activity</h3>
-                <p className="muted" style={{ marginTop: '0.5rem' }}>
-                  No recent activity. Start by creating or claiming donations!
-                </p>
               </div>
             </div>
           </article>
+
+          <article className="card">
+            <header className="card-header">
+              <h2>Previous Orders</h2>
+            </header>
+            <div className="card-body">
+              {ordersLoading ? (
+                <p className="muted">Loading orders...</p>
+              ) : orders.length === 0 ? (
+                <p className="muted">
+                  You haven't placed any orders yet. Browse available food on the Buy page to get started!
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {(ordersExpanded ? orders : orders.slice(0, 3)).map((order) => {
+                    const formatDate = (dateString) => {
+                      if (!dateString) return 'N/A';
+                      const date = new Date(dateString);
+                      return date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                    };
+
+                    const formatStatus = (status) => {
+                      const statusMap = {
+                        'pending': { text: 'Pending', color: '#f59e0b' },
+                        'confirmed': { text: 'Confirmed', color: '#3b82f6' },
+                        'picked_up': { text: 'Picked Up', color: '#10b981' },
+                        'cancelled': { text: 'Cancelled', color: '#ef4444' },
+                        'expired': { text: 'Expired', color: '#6b7280' }
+                      };
+                      return statusMap[status] || { text: status, color: '#6b7280' };
+                    };
+
+                    const statusInfo = formatStatus(order.status);
+
+                    return (
+                      <div
+                        key={order._id || order.id}
+                        style={{
+                          padding: '1rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          backgroundColor: '#f9fafb'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                          <div>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                              {order.listing?.title || order.listingTitle || 'Unknown Item'}
+                            </h3>
+                            <p style={{ margin: '0.25rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
+                              Ordered on {formatDate(order.createdAt)}
+                            </p>
+                          </div>
+                          <span
+                            style={{
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '4px',
+                              backgroundColor: statusInfo.color + '20',
+                              color: statusInfo.color,
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {statusInfo.text}
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginTop: '0.75rem' }}>
+                          <div>
+                            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Quantity: </span>
+                            <strong>{order.quantity}</strong>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total: </span>
+                            <strong>${(order.totalPrice || 0).toFixed(2)}</strong>
+                          </div>
+                          {order.pickupLocation && (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup: </span>
+                              <strong>{order.pickupLocation}</strong>
+                            </div>
+                          )}
+                          {order.pickupTime && (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup Window: </span>
+                              <strong>{order.pickupTime}</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {orders.length > 3 && (
+                    <button
+                      onClick={() => setOrdersExpanded(!ordersExpanded)}
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.75rem 1rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        backgroundColor: '#ffffff',
+                        color: '#2e7d32',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        fontSize: '0.9rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#f5f7fb';
+                        e.target.style.borderColor = '#2e7d32';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#ffffff';
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    >
+                      {ordersExpanded 
+                        ? `Show Less (${orders.length - 3} hidden)` 
+                        : `Show All Orders (${orders.length - 3} more)`}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </article>
+
+          {(user?.role === 'dining_hall_staff' || user?.role === 'nonprofit_coordinator') && (
+            <article className="card">
+              <header className="card-header">
+                <h2>Previous Postings</h2>
+              </header>
+              <div className="card-body">
+                {listingsLoading ? (
+                  <p className="muted">Loading postings...</p>
+                ) : listings.length === 0 ? (
+                  <p className="muted">
+                    You haven't created any listings yet. Create your first listing on the Sell page to get started!
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {(listingsExpanded ? listings : listings.slice(0, 3)).map((listing) => {
+                      const formatDate = (dateString) => {
+                        if (!dateString) return 'N/A';
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      };
+
+                      const formatPickupWindow = (start, end) => {
+                        if (!start || !end) return 'N/A';
+                        const startDate = new Date(start);
+                        const endDate = new Date(end);
+                        const formatDateTime = (date) => {
+                          const hours = date.getHours();
+                          const minutes = date.getMinutes();
+                          const ampm = hours >= 12 ? 'PM' : 'AM';
+                          const displayHours = hours % 12 || 12;
+                          const displayMinutes = minutes.toString().padStart(2, '0');
+                          const month = date.toLocaleDateString('en-US', { month: 'short' });
+                          const day = date.getDate();
+                          const year = date.getFullYear();
+                          return `${month} ${day}, ${year} ${displayHours}:${displayMinutes} ${ampm}`;
+                        };
+                        // If same day, show date once
+                        const isSameDay = startDate.toDateString() === endDate.toDateString();
+                        if (isSameDay) {
+                          const month = startDate.toLocaleDateString('en-US', { month: 'short' });
+                          const day = startDate.getDate();
+                          const year = startDate.getFullYear();
+                          const startTime = `${startDate.getHours() % 12 || 12}:${startDate.getMinutes().toString().padStart(2, '0')} ${startDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+                          const endTime = `${endDate.getHours() % 12 || 12}:${endDate.getMinutes().toString().padStart(2, '0')} ${endDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+                          return `${month} ${day}, ${year} ${startTime} – ${endTime}`;
+                        } else {
+                          return `${formatDateTime(startDate)} – ${formatDateTime(endDate)}`;
+                        }
+                      };
+
+                      const formatStatus = (status) => {
+                        const statusMap = {
+                          'active': { text: 'Active', color: '#10b981' },
+                          'sold_out': { text: 'Sold Out', color: '#f59e0b' },
+                          'expired': { text: 'Expired', color: '#6b7280' },
+                          'cancelled': { text: 'Cancelled', color: '#ef4444' }
+                        };
+                        return statusMap[status] || { text: status, color: '#6b7280' };
+                      };
+
+                      const statusInfo = formatStatus(listing.status);
+
+                      return (
+                        <div
+                          key={listing._id || listing.id}
+                          style={{
+                            padding: '1rem',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            backgroundColor: '#f9fafb'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                            <div>
+                              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                                {listing.title || 'Untitled Listing'}
+                              </h3>
+                              <p style={{ margin: '0.25rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
+                                Posted on {formatDate(listing.createdAt)}
+                              </p>
+                            </div>
+                            <span
+                              style={{
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '4px',
+                                backgroundColor: statusInfo.color + '20',
+                                color: statusInfo.color,
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                              }}
+                            >
+                              {statusInfo.text}
+                            </span>
+                          </div>
+                          {listing.description && (
+                            <p style={{ margin: '0.5rem 0', color: '#374151', fontSize: '0.9rem' }}>
+                              {listing.description}
+                            </p>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginTop: '0.75rem' }}>
+                            <div>
+                              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Available: </span>
+                              <strong>{listing.availableUnits || 0} {listing.unitLabel || 'units'}</strong>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Price: </span>
+                              <strong>${(listing.price || 0).toFixed(2)}</strong>
+                              {listing.unitLabel && listing.unitLabel !== 'lbs' && (
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}> / {listing.unitLabel}</span>
+                              )}
+                            </div>
+                            {listing.location && (
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Location: </span>
+                                <strong>{listing.location}</strong>
+                              </div>
+                            )}
+                            {listing.pickupWindowStart && listing.pickupWindowEnd && (
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pickup Window: </span>
+                                <strong>{formatPickupWindow(listing.pickupWindowStart, listing.pickupWindowEnd)}</strong>
+                              </div>
+                            )}
+                            {listing.sellerType && (
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Seller Type: </span>
+                                <strong>{listing.sellerType}</strong>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {listings.length > 3 && (
+                      <button
+                        onClick={() => setListingsExpanded(!listingsExpanded)}
+                        style={{
+                          marginTop: '0.5rem',
+                          padding: '0.75rem 1rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          backgroundColor: '#ffffff',
+                          color: '#2e7d32',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontSize: '0.9rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#f5f7fb';
+                          e.target.style.borderColor = '#2e7d32';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#ffffff';
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      >
+                        {listingsExpanded 
+                          ? `Show Less (${listings.length - 3} hidden)` 
+                          : `Show All Postings (${listings.length - 3} more)`}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </article>
+          )}
 
           <article className="card">
             <header className="card-header">
