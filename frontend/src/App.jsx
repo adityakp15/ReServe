@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Buy from './pages/Buy';
 import Sell from './pages/Sell';
 import Profile from './pages/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
@@ -12,12 +13,12 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/buy" element={<Buy />} />
-        <Route path="/sell" element={<Sell />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/buy" element={<ProtectedRoute><Buy /></ProtectedRoute>} />
+        <Route path="/sell" element={<ProtectedRoute><Sell /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

@@ -39,7 +39,7 @@ function Profile() {
     if (user) {
       fetchOrders();
       // If user is a seller, fetch their listings
-      if (user.role === 'dining_hall_staff' || user.role === 'nonprofit_coordinator') {
+      if (user.role === 'dining_hall_staff') {
         fetchListings();
       }
     }
@@ -89,7 +89,7 @@ function Profile() {
   useEffect(() => {
     if (!user) return;
 
-    const isSeller = user.role === 'dining_hall_staff' || user.role === 'nonprofit_coordinator';
+    const isSeller = user.role === 'dining_hall_staff';
     
     if (isSeller) {
       // For sellers: calculate from listings
@@ -139,8 +139,7 @@ function Profile() {
   const getRoleDisplay = (role) => {
     const roleMap = {
       'student': 'Student',
-      'dining_hall_staff': 'Dining Hall Staff',
-      'nonprofit_coordinator': 'Nonprofit Coordinator'
+      'dining_hall_staff': 'Dining Hall Staff'
     };
     // Convert any legacy admin roles to dining_hall_staff
     if (role === 'admin') {
@@ -469,7 +468,7 @@ function Profile() {
             </div>
           </article>
 
-          {(user?.role === 'dining_hall_staff' || user?.role === 'nonprofit_coordinator') && (
+          {user?.role === 'dining_hall_staff' && (
             <article className="card">
               <header className="card-header">
                 <h2>Previous Postings</h2>

@@ -230,7 +230,7 @@ function Sell() {
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚫</div>
               <h2>You don't have permission to access this page</h2>
               <p className="muted" style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-                Only sellers (Dining Hall Staff and Nonprofit Coordinators) can create listings.
+                Only sellers (Dining Hall Staff) can create listings.
                 As a student, you can browse and reserve available food on the Buy page.
               </p>
               <button 

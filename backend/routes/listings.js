@@ -7,8 +7,8 @@ const router = express.Router();
 
 // @route   POST /api/listings
 // @desc    Create a new listing (sell food)
-// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
-router.post('/', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff)
+router.post('/', authenticateToken, authorizeRoles('dining_hall_staff'), async (req, res) => {
   try {
     const {
       title,
@@ -395,8 +395,8 @@ router.get('/seller/my', authenticateToken, async (req, res) => {
 
 // @route   PATCH /api/listings/:id
 // @desc    Update a listing
-// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
-router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff)
+router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff'), async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
 
@@ -444,8 +444,8 @@ router.patch('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'non
 
 // @route   DELETE /api/listings/:id
 // @desc    Delete a listing
-// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
-router.delete('/:id', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff)
+router.delete('/:id', authenticateToken, authorizeRoles('dining_hall_staff'), async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
 
