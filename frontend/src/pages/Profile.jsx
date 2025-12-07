@@ -16,34 +16,6 @@ function Profile() {
   const [listings, setListings] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [listingsExpanded, setListingsExpanded] = useState(false);
-  const [impactStats, setImpactStats] = useState({
-    totalDonations: 0,
-    mealsProvided: 0,
-    poundsDiverted: 0
-  });
-
-  useEffect(() => {
-    // Try to get user from localStorage first
-    const localUser = getUserData();
-    if (localUser) {
-      setUser(localUser);
-      setLoading(false);
-    } else {
-      // If not in localStorage, fetch from API
-      fetchUserData();
-    }
-  }, []);
-
-  useEffect(() => {
-    // Fetch orders and listings when user is loaded
-    if (user) {
-      fetchOrders();
-      // If user is a seller, fetch their listings
-      if (user.role === 'dining_hall_staff') {
-        fetchListings();
-      }
-    }
-  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -58,6 +30,30 @@ function Profile() {
       setTimeout(() => navigate('/login'), 2000);
     }
   };
+
+  useEffect(() => {
+    // Try to get user from localStorage first
+    const localUser = getUserData();
+    if (localUser) {
+      setUser(localUser);
+      setLoading(false);
+    } else {
+      // If not in localStorage, fetch from API
+      fetchUserData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Fetch orders and listings when user is loaded
+    if (user) {
+      fetchOrders();
+      // If user is a seller, fetch their listings
+      if (user.role === 'dining_hall_staff') {
+        fetchListings();
+      }
+    }
+  }, [user]);
 
   const fetchOrders = async () => {
     try {
@@ -84,52 +80,6 @@ function Profile() {
       setListingsLoading(false);
     }
   };
-
-  // Calculate impact stats
-  useEffect(() => {
-    if (!user) return;
-
-    const isSeller = user.role === 'dining_hall_staff';
-    
-    if (isSeller) {
-      // For sellers: calculate from listings
-      const totalDonations = listings.length;
-      let totalMeals = 0;
-      let totalPounds = 0;
-
-      listings.forEach(listing => {
-        const units = listing.availableUnits || 0;
-        if (listing.unitLabel === 'lbs') {
-          totalPounds += units;
-        } else if (listing.unitLabel === 'meals') {
-          totalMeals += units;
-        }
-        // For other unit labels, we could add them to meals or handle separately
-        // For simplicity, let's add trays/boxes/slices to meals count
-        if (['trays', 'boxes', 'slices'].includes(listing.unitLabel)) {
-          totalMeals += units;
-        }
-      });
-
-      setImpactStats({
-        totalDonations,
-        mealsProvided: totalMeals,
-        poundsDiverted: totalPounds
-      });
-    } else {
-      // For buyers/students: calculate from orders
-      // Count all quantities as meals/items bought
-      const totalMealsBought = orders.reduce((sum, order) => {
-        return sum + (order.quantity || 0);
-      }, 0);
-
-      setImpactStats({
-        totalDonations: 0,
-        mealsProvided: totalMealsBought,
-        poundsDiverted: 0
-      });
-    }
-  }, [user, listings, orders]);
 
   const handleLogout = () => {
     clearAuthData();
@@ -264,32 +214,6 @@ function Profile() {
               <div>
                 <span className="label">Sign-in Method:</span>
                 <span className="value">{user.picture ? 'Google OAuth' : 'Email/Password'}</span>
-              </div>
-            </div>
-          </article>
-
-          <article className="card">
-            <header className="card-header">
-              <h2>Your Impact</h2>
-            </header>
-            <div className="card-body">
-              <div className="stats">
-                <div className="stat-card">
-                  <span className="stat-label">Total Donations</span>
-                  <span className="stat-value">{impactStats.totalDonations}</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">
-                    {user?.role === 'student' ? 'Meals Bought' : 'Meals Provided'}
-                  </span>
-                  <span className="stat-value">{impactStats.mealsProvided}</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Pounds Diverted</span>
-                  <span className="stat-value">
-                    {impactStats.poundsDiverted > 0 ? `${impactStats.poundsDiverted} lbs` : '0 lbs'}
-                  </span>
-                </div>
               </div>
             </div>
           </article>
@@ -524,18 +448,6 @@ function Profile() {
                         }
                       };
 
-                      const formatStatus = (status) => {
-                        const statusMap = {
-                          'active': { text: 'Active', color: '#10b981' },
-                          'sold_out': { text: 'Sold Out', color: '#f59e0b' },
-                          'expired': { text: 'Expired', color: '#6b7280' },
-                          'cancelled': { text: 'Cancelled', color: '#ef4444' }
-                        };
-                        return statusMap[status] || { text: status, color: '#6b7280' };
-                      };
-
-                      const statusInfo = formatStatus(listing.status);
-
                       return (
                         <div
                           key={listing._id || listing.id}
@@ -546,27 +458,13 @@ function Profile() {
                             backgroundColor: '#f9fafb'
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                            <div>
-                              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
-                                {listing.title || 'Untitled Listing'}
-                              </h3>
-                              <p style={{ margin: '0.25rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
-                                Posted on {formatDate(listing.createdAt)}
-                              </p>
-                            </div>
-                            <span
-                              style={{
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '4px',
-                                backgroundColor: statusInfo.color + '20',
-                                color: statusInfo.color,
-                                fontSize: '0.875rem',
-                                fontWeight: '500'
-                              }}
-                            >
-                              {statusInfo.text}
-                            </span>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                              {listing.title || 'Untitled Listing'}
+                            </h3>
+                            <p style={{ margin: '0.25rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
+                              Posted on {formatDate(listing.createdAt)}
+                            </p>
                           </div>
                           {listing.description && (
                             <p style={{ margin: '0.5rem 0', color: '#374151', fontSize: '0.9rem' }}>
