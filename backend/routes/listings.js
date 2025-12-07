@@ -62,8 +62,34 @@ router.post('/', authenticateToken, authorizeRoles('dining_hall_staff'), async (
     }
 
     // Validate pickup window
-    const pickupStart = new Date(winFrom);
-    const pickupEnd = new Date(winTo);
+    // datetime-local inputs send "YYYY-MM-DDTHH:mm" format (local time, no timezone)
+    // We need to parse it as local time explicitly to avoid timezone conversion issues
+    const parseLocalDateTime = (dateTimeString) => {
+      // If the string is in "YYYY-MM-DDTHH:mm" format (no timezone), treat it as local time
+      if (dateTimeString && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateTimeString)) {
+        // Parse as local time by creating date components
+        const [datePart, timePart] = dateTimeString.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        // Create date in local timezone (this is what the user selected)
+        return new Date(year, month - 1, day, hours, minutes);
+      }
+      // Fallback to standard Date parsing
+      return new Date(dateTimeString);
+    };
+    
+    const pickupStart = parseLocalDateTime(winFrom);
+    const pickupEnd = parseLocalDateTime(winTo);
+    const now = new Date();
+    
+    // Validate that pickup start time is not in the past
+    if (pickupStart < now) {
+      return res.status(400).json({
+        error: 'Pickup window start time cannot be in the past'
+      });
+    }
+    
+    // Validate that pickup end time is after start time
     if (pickupEnd <= pickupStart) {
       return res.status(400).json({
         error: 'Pickup window end must be after start'

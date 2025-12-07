@@ -607,7 +607,7 @@ function Buy() {
                     <strong>{modal.product.title}</strong> for <strong>{fmtUSD(modal.qty * modal.product.price)}</strong>.
                   </p>
                   <p className="muted">
-                    Pick up at <strong>{modal.product.hall}</strong> during <strong>{modal.product.time}</strong>.
+                    Pickup at <strong>{modal.product.hall}</strong>.
                   </p>
                   <div className="modal-actions single">
                     <button type="button" className="btn btn--block" onClick={closeModal}>

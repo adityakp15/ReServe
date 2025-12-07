@@ -53,11 +53,51 @@ function Sell() {
 
   const fmtUSD = (n) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 
+  // Helper function to get current datetime in format for datetime-local input (YYYY-MM-DDTHH:mm)
+  const getCurrentDateTimeLocal = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Clear previous error for this field
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
+    }
+    
+    // Real-time validation for pickup window dates
+    if (name === 'winFrom') {
+      const startDate = new Date(value);
+      const now = new Date();
+      if (value && startDate < now) {
+        setErrors({ ...errors, windowFrom: 'Pickup start time cannot be in the past.' });
+      } else if (errors.windowFrom) {
+        // Clear the error if it's now valid
+        setErrors({ ...errors, windowFrom: '' });
+      }
+      
+      // If end time is set, validate it's after the new start time
+      if (formData.winTo && new Date(formData.winTo) <= startDate) {
+        setErrors({ ...errors, windowTo: 'End must be after start.' });
+      }
+    }
+    
+    if (name === 'winTo') {
+      const endDate = new Date(value);
+      if (formData.winFrom && endDate <= new Date(formData.winFrom)) {
+        setErrors({ ...errors, windowTo: 'End must be after start.' });
+      } else if (errors.windowTo && value) {
+        // Clear the error if it's now valid
+        setErrors({ ...errors, windowTo: '' });
+      }
     }
   };
 
@@ -132,8 +172,23 @@ function Sell() {
     if (!formData.location.trim()) newErrors.location = 'Pickup location is required.';
     if (!formData.winFrom) newErrors.windowFrom = 'Pickup start is required.';
     if (!formData.winTo) newErrors.windowTo = 'Pickup end is required.';
-    if (formData.winFrom && formData.winTo && new Date(formData.winTo) <= new Date(formData.winFrom)) {
-      newErrors.windowTo = 'End must be after start.';
+    
+    // Validate that pickup start time is not in the past
+    if (formData.winFrom) {
+      const startDate = new Date(formData.winFrom);
+      const now = new Date();
+      if (startDate < now) {
+        newErrors.windowFrom = 'Pickup start time cannot be in the past.';
+      }
+    }
+    
+    // Validate that pickup end time is after start time
+    if (formData.winFrom && formData.winTo) {
+      const startDate = new Date(formData.winFrom);
+      const endDate = new Date(formData.winTo);
+      if (endDate <= startDate) {
+        newErrors.windowTo = 'End must be after start.';
+      }
     }
     
     if (formData.stype === 'Dining Hall' && !formData.dhall) {
@@ -180,6 +235,16 @@ function Sell() {
       setSubmitting(true);
 
       // Prepare data for API
+      // Convert datetime-local values to ISO strings with timezone to preserve user's local time
+      const convertToISO = (dateTimeLocal) => {
+        if (!dateTimeLocal) return null;
+        // datetime-local format: "YYYY-MM-DDTHH:mm"
+        // Create a Date object from the local datetime (this interprets it as local time)
+        const localDate = new Date(dateTimeLocal);
+        // Convert to ISO string (includes timezone info)
+        return localDate.toISOString();
+      };
+
       const listingData = {
         title: formData.title.trim(),
         desc: formData.desc.trim(),
@@ -187,8 +252,8 @@ function Sell() {
         unitLabel: formData.unitLabel,
         price: parseFloat(formData.price),
         location: formData.location.trim(),
-        winFrom: formData.winFrom,
-        winTo: formData.winTo,
+        winFrom: convertToISO(formData.winFrom),
+        winTo: convertToISO(formData.winTo),
         stype: formData.stype,
         dhall: formData.dhall || null,
         rname: formData.rname.trim() || null,
@@ -338,14 +403,31 @@ function Sell() {
               </div>
               <div className="col-span-3 field">
                 <label className="label" htmlFor="winFrom">Window – From <span className="req">*</span></label>
-                <input id="winFrom" className="input" type="datetime-local" required 
-                       value={formData.winFrom} onChange={handleChange} name="winFrom" />
+                <input 
+                  id="winFrom" 
+                  className="input" 
+                  type="datetime-local" 
+                  required 
+                  min={getCurrentDateTimeLocal()}
+                  value={formData.winFrom} 
+                  onChange={handleChange} 
+                  name="winFrom" 
+                />
+                <div className="hint">Cannot be in the past.</div>
                 {errors.windowFrom && <div className="error">{errors.windowFrom}</div>}
               </div>
               <div className="col-span-3 field">
                 <label className="label" htmlFor="winTo">Window – To <span className="req">*</span></label>
-                <input id="winTo" className="input" type="datetime-local" required 
-                       value={formData.winTo} onChange={handleChange} name="winTo" />
+                <input 
+                  id="winTo" 
+                  className="input" 
+                  type="datetime-local" 
+                  required 
+                  min={formData.winFrom || getCurrentDateTimeLocal()}
+                  value={formData.winTo} 
+                  onChange={handleChange} 
+                  name="winTo" 
+                />
                 <div className="hint">End time must be after start.</div>
                 {errors.windowTo && <div className="error">{errors.windowTo}</div>}
               </div>
