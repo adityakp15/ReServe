@@ -134,7 +134,7 @@ function Signup() {
           )}
           {success && (
             <p id="form-error" className="form-error" style={{color: '#2e7d32'}} role="alert" aria-live="polite">
-              Success! Your account has been created (demo).
+              Success! Your account has been created.
             </p>
           )}
 
@@ -216,16 +216,6 @@ function Signup() {
                     onChange={handleChange}
                   />
                   <span>Dining Hall Staff</span>
-                </label>
-                <label className="radio">
-                  <input 
-                    type="radio" 
-                    name="role" 
-                    value="nonprofit_coordinator"
-                    checked={formData.role === 'nonprofit_coordinator'}
-                    onChange={handleChange}
-                  />
-                  <span>Nonprofit Coordinator</span>
                 </label>
               </div>
             </fieldset>

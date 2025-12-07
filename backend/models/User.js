@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['dining_hall_staff', 'nonprofit_coordinator', 'student'],
+    enum: ['dining_hall_staff', 'student'],
     required: true
   },
   password: {
