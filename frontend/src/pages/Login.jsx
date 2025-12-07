@@ -90,8 +90,8 @@ function Login() {
               <span style={{ color: '#8ef7b4' }}>Join the effort to reduce food waste on campus.</span>
             </h1>
             <p className="muted">
-              The ReServe dashboard keeps tracking, claiming, and confirming surplus food donations simple for both dining halls and local non-profits with
-              campus-wide transparency at every step. Sign in to turn today’s extra meals into community impact.
+              The ReServe dashboard keeps tracking, claiming, and confirming surplus food donations simple for dining halls with
+              campus-wide transparency at every step. Sign in to turn today's extra meals into community impact.
             </p>
             <ul className="benefits">
               <li className="benefit-item">

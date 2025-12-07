@@ -205,8 +205,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 // @route   PATCH /api/orders/:id/confirm
 // @desc    Confirm an order (seller action)
-// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
-router.patch('/:id/confirm', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff)
+router.patch('/:id/confirm', authenticateToken, authorizeRoles('dining_hall_staff'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('listing');
@@ -248,8 +248,8 @@ router.patch('/:id/confirm', authenticateToken, authorizeRoles('dining_hall_staf
 
 // @route   PATCH /api/orders/:id/picked-up
 // @desc    Mark order as picked up (seller action)
-// @access  Private (Sellers only: dining_hall_staff, nonprofit_coordinator)
-router.patch('/:id/picked-up', authenticateToken, authorizeRoles('dining_hall_staff', 'nonprofit_coordinator'), async (req, res) => {
+// @access  Private (Sellers only: dining_hall_staff)
+router.patch('/:id/picked-up', authenticateToken, authorizeRoles('dining_hall_staff'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('listing');
