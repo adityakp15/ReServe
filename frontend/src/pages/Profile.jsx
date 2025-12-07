@@ -17,29 +17,6 @@ function Profile() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [listingsExpanded, setListingsExpanded] = useState(false);
 
-  useEffect(() => {
-    // Try to get user from localStorage first
-    const localUser = getUserData();
-    if (localUser) {
-      setUser(localUser);
-      setLoading(false);
-    } else {
-      // If not in localStorage, fetch from API
-      fetchUserData();
-    }
-  }, []);
-
-  useEffect(() => {
-    // Fetch orders and listings when user is loaded
-    if (user) {
-      fetchOrders();
-      // If user is a seller, fetch their listings
-      if (user.role === 'dining_hall_staff') {
-        fetchListings();
-      }
-    }
-  }, [user]);
-
   const fetchUserData = async () => {
     try {
       const response = await authAPI.getCurrentUser();
@@ -53,6 +30,30 @@ function Profile() {
       setTimeout(() => navigate('/login'), 2000);
     }
   };
+
+  useEffect(() => {
+    // Try to get user from localStorage first
+    const localUser = getUserData();
+    if (localUser) {
+      setUser(localUser);
+      setLoading(false);
+    } else {
+      // If not in localStorage, fetch from API
+      fetchUserData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Fetch orders and listings when user is loaded
+    if (user) {
+      fetchOrders();
+      // If user is a seller, fetch their listings
+      if (user.role === 'dining_hall_staff') {
+        fetchListings();
+      }
+    }
+  }, [user]);
 
   const fetchOrders = async () => {
     try {
@@ -79,52 +80,6 @@ function Profile() {
       setListingsLoading(false);
     }
   };
-
-  // Calculate impact stats
-  useEffect(() => {
-    if (!user) return;
-
-    const isSeller = user.role === 'dining_hall_staff';
-    
-    if (isSeller) {
-      // For sellers: calculate from listings
-      const totalDonations = listings.length;
-      let totalMeals = 0;
-      let totalPounds = 0;
-
-      listings.forEach(listing => {
-        const units = listing.availableUnits || 0;
-        if (listing.unitLabel === 'lbs') {
-          totalPounds += units;
-        } else if (listing.unitLabel === 'meals') {
-          totalMeals += units;
-        }
-        // For other unit labels, we could add them to meals or handle separately
-        // For simplicity, let's add trays/boxes/slices to meals count
-        if (['trays', 'boxes', 'slices'].includes(listing.unitLabel)) {
-          totalMeals += units;
-        }
-      });
-
-      setImpactStats({
-        totalDonations,
-        mealsProvided: totalMeals,
-        poundsDiverted: totalPounds
-      });
-    } else {
-      // For buyers/students: calculate from orders
-      // Count all quantities as meals/items bought
-      const totalMealsBought = orders.reduce((sum, order) => {
-        return sum + (order.quantity || 0);
-      }, 0);
-
-      setImpactStats({
-        totalDonations: 0,
-        mealsProvided: totalMealsBought,
-        poundsDiverted: 0
-      });
-    }
-  }, [user, listings, orders]);
 
   const handleLogout = () => {
     clearAuthData();
