@@ -347,17 +347,27 @@ function Buy() {
               const qty = quantities[productId] || 0;
               const available = product.available || product.availableUnits || 0;
               return (
-                <article key={productId} className="card pad product">
+                <article
+                  key={productId}
+                  className="card pad product interactive"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openDetail(product)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openDetail(product);
+                    }
+                  }}
+                >
                   <div className="product-body">
                     <div className="product-topline">
-                      <button
-                        type="button"
-                        className="product-title link-like"
-                        onClick={() => openDetail(product)}
-                        style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left' }}
+                      <h3
+                        className="product-title"
+                        style={{ margin: 0, textAlign: 'left' }}
                       >
                         {product.title}
-                      </button>
+                      </h3>
                     </div>
 
                     <div className="product-meta">
@@ -386,7 +396,11 @@ function Buy() {
                     </div>
                   </div>
 
-                  <div className="product-cta">
+                  <div
+                    className="product-cta"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
                     <div className="qty-row">
                       <select
                         className="select qty"
