@@ -1,22 +1,31 @@
 import Listing from '../models/Listing.js';
 
 /**
- * Cleanup job to remove expired listings from the database
- * Runs daily at midnight to clean up listings where pickupWindowEnd has passed
+ * Cleanup job to mark expired listings as 'expired' status
+ * Runs daily at midnight to update listings where pickupWindowEnd has passed
+ * Listings are NOT deleted - they remain in the database for historical purposes
+ * (e.g., showing in user profiles), but are filtered out from Buy page listings
  */
 export const cleanupExpiredListings = async () => {
   try {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    // Find all listings where pickupWindowEnd has passed (before today at midnight)
-    // This means the pickup window ended yesterday or earlier
-    const result = await Listing.deleteMany({
-      pickupWindowEnd: { $lt: today }
-    });
+    // Find all active listings where pickupWindowEnd has passed (before today at midnight)
+    // Update their status to 'expired' instead of deleting them
+    // This preserves listings for historical purposes (profile page, orders, etc.)
+    const result = await Listing.updateMany(
+      {
+        pickupWindowEnd: { $lt: today },
+        status: { $ne: 'expired' } // Only update listings that aren't already expired
+      },
+      {
+        $set: { status: 'expired' }
+      }
+    );
 
-    console.log(`[Cleanup Job] Removed ${result.deletedCount} expired listing(s) at ${now.toISOString()}`);
-    return result.deletedCount;
+    console.log(`[Cleanup Job] Marked ${result.modifiedCount} listing(s) as expired at ${now.toISOString()}`);
+    return result.modifiedCount;
   } catch (error) {
     console.error('[Cleanup Job] Error cleaning up expired listings:', error);
     throw error;
