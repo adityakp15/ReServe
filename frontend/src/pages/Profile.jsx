@@ -106,7 +106,7 @@ function Profile() {
     if (!confirmDelete) return;
 
     const confirmAgain = window.confirm(
-      'This is your last chance. Are you absolutely sure you want to delete your account? Type YES in the next prompt to confirm.'
+      'This is your last chance. Are you absolutely sure you want to delete your account?'
     );
 
     if (!confirmAgain) return;
